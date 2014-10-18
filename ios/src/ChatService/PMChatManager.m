@@ -29,16 +29,16 @@
 -(NSDictionary*) login:(NSString*)user :(NSString*)passwd withError:(NSError**)error {
 	dispatch_semaphore_t sema = dispatch_semaphore_create(0);
 	__block NSDictionary *dict;
-	__block NSError *exTmp;
+	__block NSError *er;
 	[self asyncLogin:user :passwd withCompletion:^(NSDictionary *d,NSError *e){
 		if(e) {
-			exTmp = e;
+			er = e;
 		} else
 			dict = d;
 		dispatch_semaphore_signal(sema);
 	}];
 	dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
-	if(error) *error = exTmp;
+	if(error) *error = er;
 	return dict;
 }
 
