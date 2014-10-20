@@ -16,7 +16,6 @@
 	NSString *post = [array componentsJoinedByString:@"&"];
 	NSData *postData = [post dataUsingEncoding:NSASCIIStringEncoding allowLossyConversion:YES];
 	[self setValue:[NSString stringWithFormat:@"%lu", [post length]] forHTTPHeaderField:@"Content-Length"];
-	NSLog(@"%@", post);
 	[self setHTTPBody:postData];
 	return self;
 }
