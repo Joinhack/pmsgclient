@@ -9,7 +9,7 @@ int main() {
 		chat.restUrl = @"http://localhost:8000";
 		NSError*  err = nil;
 
-		id v = [[chat chatManager] login:@"joinhack" :@"111111"  withError:&err];
+		id v = [[chat chatManager] login:@"join" :@"111111"  withError:&err];
 		if(err) {
 			NSLog(@"%@", err);
 			return -1;

@@ -4,80 +4,46 @@
 #import <Models/PMMsg.h>
 #import <pmsg.h>
 #import "PMChatManager.h"
+#import "PMMsgManager.h"
 
 @implementation PMChatManager {
-	SRWebSocket *ws;
-	NSOperationQueue *operationQueue;
+	PMLoginManager* _loginManager;
+	PMMsgManager* _msgManager;
 }
 
-@synthesize delegate = delegate;
-
-
--(id)init {
-	operationQueue = [[NSOperationQueue alloc] init];
-	return self;
+-(PMLoginManager*) loginManager {
+	if(_loginManager) return _loginManager;
+	@synchronized(self) {
+		if(_loginManager) return _loginManager;
+		_loginManager = [[PMLoginManager alloc] init];
+	}
+	return _loginManager;
 }
 
--(void)initWithOperationQueue:(NSOperationQueue*)queue {
-	operationQueue = queue;
+-(PMMsgManager*) msgManager {
+	if(_msgManager) return _msgManager;
+	@synchronized(self) {
+		if(_msgManager) return _msgManager;
+		_msgManager = [[PMMsgManager alloc] init];
+	}
+	return _msgManager;
 }
+
 
 -(NSDictionary*) login:(NSString*)user :(NSString*)passwd {
-	return [self login:user :passwd withError:nil];
+	return [[self loginManager] login:user :passwd];
 }
 
--(NSDictionary*) login:(NSString*)user :(NSString*)passwd withError:(NSError**)error {
-	dispatch_semaphore_t sema = dispatch_semaphore_create(0);
-	__block NSDictionary *dict;
-	__block NSError *er;
-	[self asyncLogin:user :passwd withCompletion:^(NSDictionary *d,NSError *e){
-		if(e) {
-			er = e;
-		} else
-			dict = d;
-		dispatch_semaphore_signal(sema);
-	}];
-	dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
-	if(error) *error = er;
-	return dict;
+-(NSDictionary*) login:(NSString*)user :(NSString*)passwd withError:(NSError**) err {
+	return [[self loginManager] login:user :passwd withError:err];
 }
 
 -(void) asyncLogin:(NSString*)user :(NSString*)passwd {
-	[self asyncLogin:user :passwd withCompletion:nil];
+	[[self loginManager] asyncLogin:user :passwd];
 }
 
 -(void) asyncLogin:(NSString*)user :(NSString*)passwd withCompletion:(void (^)(NSDictionary*,NSError*)) completion {
-	NSString *loginUrl = [[PMChat sharedInstance].restUrl stringByAppendingString:@"/user/login"];
-	NSURL *url = [[NSURL alloc] initWithString:loginUrl];
-	
-	[NSURLConnection sendAsynchronousRequest:[[NSURLRequest alloc] initWithURL:url] queue:operationQueue completionHandler:^(NSURLResponse *response, NSData *data, NSError *error) {
-		NSDictionary *dict = nil;
-		if(!error) {
-			dict = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:&error];
-			if(!dict[@"code"]) {
-				error = [NSError errorWithDomain:@"Login" code:-1 userInfo:@{@"detail":@"error format"}];
-				goto FINISH;
-			}
-			if(!dict[@"code"] != 0) {
-				error = [NSError errorWithDomain:@"Login" code:-1 userInfo:@{@"detail":@"error code"}];
-				goto FINISH;
-			}
-
-			NSArray *cookies = [NSHTTPCookie cookiesWithResponseHeaderFields:[(NSHTTPURLResponse*)response allHeaderFields] forURL:[NSURL URLWithString:loginUrl]];
-			NSLog(@"%@", cookies);
-
-		}
-FINISH:
-		if(completion)
-			completion(dict, error);
-	}];
-
+	[[self loginManager] asyncLogin:user :passwd withCompletion:completion];
 }
-
-
--(void)send:(PMMsg*) msg {
-	[ws send:@""];
-}
-
 
 @end

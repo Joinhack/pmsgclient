@@ -8,7 +8,7 @@
 - (void)webSocketDidOpen:(SRWebSocket *)ws {
 	NSError *err;
 	id obj = @{
-		@"id": [NSNumber numberWithInteger:[[PMChat sharedInstance] whoami]],
+		@"id": [[PMChat sharedInstance] whoami],
 		@"type": @254,
 		@"devType": @2,
 		@"name": [[PMChat sharedInstance] name]

@@ -8,7 +8,7 @@
 
 }
 
-@property (atomic) NSInteger whoami;
+@property (atomic) NSNumber* whoami;
 
 @property (atomic, copy) NSString* name;
 
@@ -17,12 +17,13 @@
 @property (atomic, copy) NSString* restUrl;
 
 
-@property (atomic) NSOperationQueue* operatorQueue;
-
 +(PMChat*) sharedInstance;
 
 -(id<IChatManager>) chatManager;
 
--(id<IChatManager>) chatManager;
+-(NSOperationQueue*) operationQueue;
+
+-(void) setOperationQueue:(NSOperationQueue*)q;
+
 
 @end
