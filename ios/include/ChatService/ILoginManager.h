@@ -1,5 +1,10 @@
 #import <Foundation/Foundation.h>
 
+@protocol ILoginManagerDelegate <NSObject>
+@optional
+-(void) didLogin:(NSDictionary*)dict :(NSError*)error;
+@end
+
 @protocol ILoginManager <NSObject>
 @required
 -(NSDictionary*) login:(NSString*)user :(NSString*)passwd;
@@ -8,4 +13,6 @@
 -(void) asyncLogin:(NSString*)user :(NSString*)passwd;
 
 -(void) asyncLogin:(NSString*)user :(NSString*)passwd withCompletion:(void (^)(NSDictionary*,NSError*)) completion;
+
+-(void) asyncLogin:(NSString*)user :(NSString*)passwd withCompletion:(void (^)(NSDictionary*,NSError*))completion withQueue:(NSOperationQueue*)queue;
 @end

@@ -31,12 +31,16 @@
 	[self asyncLogin:user :passwd withCompletion:nil];
 }
 
--(void) asyncLogin:(NSString*)user :(NSString*)passwd withCompletion:(void (^)(NSDictionary*,NSError*)) completion {
+-(void) asyncLogin:(NSString*)user :(NSString*)passwd withCompletion:(void (^)(NSDictionary*,NSError*))completion {
+	[self asyncLogin:user :passwd withCompletion:completion withQueue:[[PMChat sharedInstance] operationQueue]];
+}
+
+-(void) asyncLogin:(NSString*)user :(NSString*)passwd withCompletion:(void (^)(NSDictionary*,NSError*)) completion withQueue:(NSOperationQueue*)queue {
 	PMChat *chat = [PMChat sharedInstance];
 	NSString *loginUrl = [chat.restUrl stringByAppendingString:@"/user/login"];
 	NSURL *url = [[NSURL alloc] initWithString:loginUrl];
 	NSMutableURLRequest *req = [[NSMutableURLRequest alloc] initWithURL:url withParams:@{@"name": user, @"password":passwd}];
-	[NSURLConnection sendAsynchronousRequest:req queue:[chat operationQueue] completionHandler:^(NSURLResponse *response, NSData *data, NSError *error) {
+	[NSURLConnection sendAsynchronousRequest:req queue:queue completionHandler:^(NSURLResponse *response, NSData *data, NSError *error) {
 		NSDictionary *dict = nil;
 		if(!error) {
 			dict = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:&error];
@@ -52,10 +56,11 @@
 			[PMChat sharedInstance].name = dict[@"name"];
 
 			NSArray *cookies = [NSHTTPCookie cookiesWithResponseHeaderFields:[(NSHTTPURLResponse*)response allHeaderFields] forURL:[NSURL URLWithString:loginUrl]];
-			NSLog(@"%@", cookies);
-
+			[[chat chatManager] reconnect];
 		}
+
 FINISH:
+		[[chat chatManager] invokeDelegate:@"didLogin::", dict, error];
 		if(completion)
 			completion(dict, error);
 	}];

@@ -15,4 +15,6 @@
 
 -(void) asyncSend:(PMMsg*)msg withCompletion:(void (^)(NSDictionary*,NSError*)) completion;
 
+-(void) reconnect;
+
 @end

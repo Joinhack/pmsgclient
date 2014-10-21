@@ -2,7 +2,6 @@
 #import <pmsg.h>
 #import "ChatService/PMChatManager.h"
 
-
 @implementation PMChat {
 	PMChatManager *manager;
 	dispatch_once_t once;

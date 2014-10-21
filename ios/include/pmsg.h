@@ -4,8 +4,9 @@
 #import <Models/PMTextMsgBody.h>
 #import <ChatService/IChatManager.h>
 
-@interface PMChat:NSObject {
+#define NullValue(v) v?v:[NSNull null]
 
+@interface PMChat:NSObject {
 }
 
 @property (atomic) NSNumber* whoami;
@@ -24,6 +25,5 @@
 -(NSOperationQueue*) operationQueue;
 
 -(void) setOperationQueue:(NSOperationQueue*)q;
-
 
 @end

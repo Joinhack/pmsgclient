@@ -10,12 +10,14 @@
 
 @synthesize wsDelegate = _wsDelegate;
 
--(NSDictionary*) reconnect {
+-(void) reconnect {
+	PMChat *chat = [PMChat sharedInstance];
+	[[chat chatManager] invokeDelegate:@"didConnectStateChange:", CLOSED ];
 	if(_ws) {
 		_ws.delegate = nil;
 		[_ws close];
 	};
-	 _ws = [[SRWebSocket alloc] initWithURLRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:[PMChat sharedInstance].wsUrl]]];
+	 _ws = [[SRWebSocket alloc] initWithURLRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:chat.wsUrl]]];
 	 _ws.delegate = _wsDelegate;
 	 [_ws open];
 }

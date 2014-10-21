@@ -3,6 +3,12 @@
 
 #import "PMLoginManager.h"
 
+@interface DelegatePair:NSObject {
+}
+@property id<IChatManagerDelegate> delegate;
+@property dispatch_queue_t queue;
+-(id)init:(id<IChatManagerDelegate>)d :(dispatch_queue_t)q;
+@end
 
 @interface PMChatManager:NSObject <IChatManager> {
 }
@@ -13,6 +19,14 @@
 -(void) asyncLogin:(NSString*)user :(NSString*)passwd;
 
 -(void) asyncLogin:(NSString*)user :(NSString*)passwd withCompletion:(void (^)(NSDictionary*,NSError*)) completion;
+
+-(void) asyncLogin:(NSString*)user :(NSString*)passwd withCompletion:(void (^)(NSDictionary*,NSError*))completion withQueue:(dispatch_queue_t)queue;
+
+-(void)invokeDelegate:(NSString*)method, ...;
+
+-(void)addDelegate:(id<IChatManagerDelegate>)delegate :(dispatch_queue_t)queue;
+
+-(void)removeDelegate:(id<IChatManagerDelegate>)delegate;
 
 @end
 
