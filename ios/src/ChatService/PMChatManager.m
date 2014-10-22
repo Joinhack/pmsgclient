@@ -70,7 +70,9 @@
 }
 
 -(void)invokeDelegate:(NSString*)method, ... {
-	SEL sel = NSSelectorFromString(method);
+	NSString *selStr = [method stringByReplacingOccurrencesOfString:@"%@" withString:@""];
+	selStr = [selStr stringByReplacingOccurrencesOfString:@"%d" withString:@""];
+	SEL sel = NSSelectorFromString(selStr);
 	for(DelegatePair *pair in _delegates) {
 		if([pair.delegate respondsToSelector:sel]) {
 			NSMethodSignature *signature = [[pair.delegate class] instanceMethodSignatureForSelector:sel];
@@ -79,15 +81,30 @@
 			[invocation setTarget:pair.delegate];
 			va_list args;
 			va_start(args, method);
-			id arg = nil;
-			int i = 0;
-			while ((arg = va_arg(args,id))) {
-				i++;
-				if(arg == nil) continue;
-				[invocation setArgument:&arg atIndex:i+2];	
+			int len = [method length];
+			int idx = 0;
+
+			for (int i=0; i < len; i++) {
+				if ([method characterAtIndex:i] == '%') {
+					if(i == len - 1) break;
+					char nextChar = [method characterAtIndex:i+1];
+					if(nextChar == '@') {
+						id arg = va_arg(args, id);
+						if(arg == nil) {
+							idx++;
+							continue;
+						}
+						[invocation setArgument:&arg atIndex:idx+2];
+						idx++;
+					}
+					if(nextChar == 'd') {
+						NSInteger arg = va_arg(args, NSInteger);
+						[invocation setArgument:&arg atIndex:idx+2];
+						idx++;
+					}
+				}
 			}
 			va_end(args);
-			
 			[invocation retainArguments];
 			if(pair.queue) 
 				dispatch_async(pair.queue, ^(){[invocation invoke];});

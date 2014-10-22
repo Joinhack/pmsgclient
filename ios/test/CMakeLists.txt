@@ -13,4 +13,9 @@ add_executable(main ${SRC_LIST})
 
 add_dependencies(main pmsg)
 
+
+ADD_FRAMEWORK(main Foundation)
+ADD_FRAMEWORK(main CFNetwork)
+ADD_FRAMEWORK(main Security)
+
 target_link_libraries(main -L${CMAKE_SOURCE_DIR}/lib pmsg)

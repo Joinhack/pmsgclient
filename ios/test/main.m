@@ -14,8 +14,8 @@
 	NSLog(@"--%@ %@", dict, err);
 }
 
--(void) didConnectStateChange:(PMConnectStat)state {
-	NSLog(@"state %u", state);	
+-(void) didConnectStateChange:(PMConnectStat)state from:(PMConnectStat)old {
+	NSLog(@"state %u %u", state, old);
 }
 @end
 

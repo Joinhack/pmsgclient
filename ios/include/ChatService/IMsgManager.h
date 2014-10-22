@@ -1,12 +1,12 @@
 typedef enum  NSInteger {
-	CLOSED = 0,
-	CONNECTING = 1,
-	CONNECTED = 2,
+	CLOSED = 1,
+	CONNECTING = 2,
+	CONNECTED = 3,
 } PMConnectStat;
 
 @protocol IMsgManagerDelegate <NSObject>
 @optional
--(void) didConnectStateChange:(PMConnectStat)state;
+-(void) didConnectStateChange:(PMConnectStat)state from:(PMConnectStat)old;
 @end
 
 @class PMMsg;

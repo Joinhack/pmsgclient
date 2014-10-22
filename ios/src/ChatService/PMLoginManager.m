@@ -48,19 +48,19 @@
 				error = [NSError errorWithDomain:@"Login" code:-1 userInfo:@{@"detail":@"error format"}];
 				goto FINISH;
 			}
-			if(!dict[@"code"] != 0) {
+			if(![dict[@"code"] isEqual:[NSNumber numberWithInt:0]]) {
 				error = [NSError errorWithDomain:@"Login" code:-1 userInfo:@{@"detail":@"error code"}];
 				goto FINISH;
 			}
-			[PMChat sharedInstance].whoami = dict[@"id"];
-			[PMChat sharedInstance].name = dict[@"name"];
+			chat.whoami = dict[@"id"];
+			chat.name = dict[@"name"];
 
 			NSArray *cookies = [NSHTTPCookie cookiesWithResponseHeaderFields:[(NSHTTPURLResponse*)response allHeaderFields] forURL:[NSURL URLWithString:loginUrl]];
+			
 			[[chat chatManager] reconnect];
 		}
-
 FINISH:
-		[[chat chatManager] invokeDelegate:@"didLogin::", dict, error];
+		[[chat chatManager] invokeDelegate:@"didLogin:%@:%@", dict, error];
 		if(completion)
 			completion(dict, error);
 	}];

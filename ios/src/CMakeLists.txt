@@ -12,7 +12,6 @@ SET(SRC_LIST pmsg.m
 	ChatService/PMChatManager.m
 	ChatService/PMLoginManager.m
 	ChatService/PMMsgManager.m
-	ChatService/PMWebSocketDelegate.m
 	ChatService/NSMutableURLRequest+Post.m
 	Models/PMMsg.m
 	Models/PMMsgBody.m
