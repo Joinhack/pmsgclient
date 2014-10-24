@@ -7,6 +7,9 @@ typedef enum  NSInteger {
 @protocol IMsgManagerDelegate <NSObject>
 @optional
 -(void) didConnectStateChange:(PMConnectStat)state from:(PMConnectStat)old;
+
+-(void) didReceiveMsg:(PMMsg*)msg;
+
 @end
 
 @class PMMsg;
@@ -21,6 +24,8 @@ typedef enum  NSInteger {
 -(void) asyncSend:(PMMsg*)msg;
 
 -(void) asyncSend:(PMMsg*)msg withCompletion:(void (^)(NSDictionary*,NSError*)) completion;
+
+-(void) asyncSend:(PMMsg*)msg withCompletion:(void (^)(NSDictionary*,NSError*)) completion onQueue:(dispatch_queue_t)queue;
 
 -(void) reconnect;
 @end

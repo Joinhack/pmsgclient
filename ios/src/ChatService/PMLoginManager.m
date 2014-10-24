@@ -32,14 +32,15 @@
 }
 
 -(void) asyncLogin:(NSString*)user :(NSString*)passwd withCompletion:(void (^)(NSDictionary*,NSError*))completion {
-	[self asyncLogin:user :passwd withCompletion:completion withQueue:[[PMChat sharedInstance] operationQueue]];
+	[self asyncLogin:user :passwd withCompletion:completion onQueue:[[PMChat sharedInstance] operationQueue]];
 }
 
--(void) asyncLogin:(NSString*)user :(NSString*)passwd withCompletion:(void (^)(NSDictionary*,NSError*)) completion withQueue:(NSOperationQueue*)queue {
+-(void) asyncLogin:(NSString*)user :(NSString*)passwd withCompletion:(void (^)(NSDictionary*,NSError*)) completion onQueue:(NSOperationQueue*)queue {
 	PMChat *chat = [PMChat sharedInstance];
 	NSString *loginUrl = [chat.restUrl stringByAppendingString:@"/user/login"];
 	NSURL *url = [[NSURL alloc] initWithString:loginUrl];
 	NSMutableURLRequest *req = [[NSMutableURLRequest alloc] initWithURL:url withParams:@{@"name": user, @"password":passwd}];
+	__block NSString* _password = passwd;
 	[NSURLConnection sendAsynchronousRequest:req queue:queue completionHandler:^(NSURLResponse *response, NSData *data, NSError *error) {
 		NSDictionary *dict = nil;
 		if(!error) {
@@ -54,6 +55,7 @@
 			}
 			chat.whoami = dict[@"id"];
 			chat.name = dict[@"name"];
+			chat.password = _password;
 
 			NSArray *cookies = [NSHTTPCookie cookiesWithResponseHeaderFields:[(NSHTTPURLResponse*)response allHeaderFields] forURL:[NSURL URLWithString:loginUrl]];
 			

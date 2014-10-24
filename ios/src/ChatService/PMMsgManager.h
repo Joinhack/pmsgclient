@@ -5,8 +5,6 @@
 
 }
 
-@property (atomic, strong) NSMutableDictionary *sendingMsgs;
-
 @property (atomic) PMConnectStat connectState;
 
 -(NSDictionary*) send:(PMMsg*)msg;

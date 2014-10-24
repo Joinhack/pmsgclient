@@ -13,6 +13,10 @@
 
 @property (atomic, copy) NSString* name;
 
+@property (atomic, copy) NSString* password;
+
+@property (atomic, copy) NSString* token;
+
 @property (atomic, copy) NSString* wsUrl;
 
 @property (atomic, copy) NSString* restUrl;

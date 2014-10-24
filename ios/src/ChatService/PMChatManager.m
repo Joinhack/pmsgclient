@@ -89,6 +89,7 @@
 					if(i == len - 1) break;
 					char nextChar = [method characterAtIndex:i+1];
 					if(nextChar == '@') {
+						i++;
 						id arg = va_arg(args, id);
 						if(arg == nil) {
 							idx++;
@@ -98,6 +99,7 @@
 						idx++;
 					}
 					if(nextChar == 'd') {
+						i++;
 						NSInteger arg = va_arg(args, NSInteger);
 						[invocation setArgument:&arg atIndex:idx+2];
 						idx++;
@@ -119,27 +121,47 @@
 }
 
 -(NSDictionary*) login:(NSString*)user :(NSString*)passwd {
-	return [[self loginManager] login:user :passwd];
+	return [self.loginManager login:user :passwd];
 }
 
 -(NSDictionary*) login:(NSString*)user :(NSString*)passwd withError:(NSError**) err {
-	return [[self loginManager] login:user :passwd withError:err];
+	return [self.loginManager login:user :passwd withError:err];
 }
 
 -(void) asyncLogin:(NSString*)user :(NSString*)passwd {
-	[[self loginManager] asyncLogin:user :passwd];
+	[self.loginManager asyncLogin:user :passwd];
 }
 
 -(void) asyncLogin:(NSString*)user :(NSString*)passwd withCompletion:(void (^)(NSDictionary*,NSError*)) completion {
-	[[self loginManager] asyncLogin:user :passwd withCompletion:completion];
+	[self.loginManager asyncLogin:user :passwd withCompletion:completion];
 }
 
--(void) asyncLogin:(NSString*)user :(NSString*)passwd withCompletion:(void (^)(NSDictionary*,NSError*))completion withQueue:(dispatch_queue_t)q {
-	[[self loginManager] asyncLogin:user :passwd withCompletion:completion withQueue:q];
+-(void) asyncLogin:(NSString*)user :(NSString*)passwd withCompletion:(void (^)(NSDictionary*,NSError*))completion onQueue:(NSOperationQueue*)q {
+	[self.loginManager asyncLogin:user :passwd withCompletion:completion onQueue:q];
 }
 
 -(void) reconnect {
 	[[self msgManager] reconnect];
+}
+
+-(NSDictionary*) send:(PMMsg*)msg {
+	return [self.msgManager send:msg];
+}
+
+-(NSDictionary*) send:(PMMsg*)msg withError:(NSError**)err {
+	return [self.msgManager send:msg withError:err];
+}
+
+-(void) asyncSend:(PMMsg*)msg {
+	[self.msgManager asyncSend:msg];
+}
+
+-(void) asyncSend:(PMMsg*)msg withCompletion:(void (^)(NSDictionary*,NSError*)) completion {
+	[self.msgManager asyncSend:msg withCompletion:completion];
+}
+
+-(void) asyncSend:(PMMsg*)msg withCompletion:(void (^)(NSDictionary*,NSError*)) completion onQueue:(dispatch_queue_t)queue {
+	[self.msgManager asyncSend:msg withCompletion:completion onQueue:queue];
 }
 
 @end

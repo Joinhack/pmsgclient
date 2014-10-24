@@ -20,7 +20,7 @@
 
 -(void) asyncLogin:(NSString*)user :(NSString*)passwd withCompletion:(void (^)(NSDictionary*,NSError*)) completion;
 
--(void) asyncLogin:(NSString*)user :(NSString*)passwd withCompletion:(void (^)(NSDictionary*,NSError*))completion withQueue:(dispatch_queue_t)queue;
+-(void) asyncLogin:(NSString*)user :(NSString*)passwd withCompletion:(void (^)(NSDictionary*,NSError*))completion onQueue:(dispatch_queue_t)queue;
 
 -(void)invokeDelegate:(NSString*)method, ...;
 

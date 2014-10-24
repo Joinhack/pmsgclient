@@ -5,6 +5,8 @@
 @interface PMMsg:NSObject {
 }
 
+@property (nonatomic, strong) NSString *id;
+
 @property (nonatomic, strong) NSArray *bodies;
 
 -(void) addMsgBody:(id<PMMsgBody>)body;
