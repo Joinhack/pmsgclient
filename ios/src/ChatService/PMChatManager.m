@@ -144,11 +144,11 @@
 	[[self msgManager] reconnect];
 }
 
--(NSDictionary*) send:(PMMsg*)msg {
+-(PMMsg*) send:(PMMsg*)msg {
 	return [self.msgManager send:msg];
 }
 
--(NSDictionary*) send:(PMMsg*)msg withError:(NSError**)err {
+-(PMMsg*) send:(PMMsg*)msg withError:(NSError**)err {
 	return [self.msgManager send:msg withError:err];
 }
 
@@ -156,11 +156,11 @@
 	[self.msgManager asyncSend:msg];
 }
 
--(void) asyncSend:(PMMsg*)msg withCompletion:(void (^)(NSDictionary*,NSError*)) completion {
+-(void) asyncSend:(PMMsg*)msg withCompletion:(void (^)(PMMsg*,NSError*)) completion {
 	[self.msgManager asyncSend:msg withCompletion:completion];
 }
 
--(void) asyncSend:(PMMsg*)msg withCompletion:(void (^)(NSDictionary*,NSError*)) completion onQueue:(dispatch_queue_t)queue {
+-(void) asyncSend:(PMMsg*)msg withCompletion:(void (^)(PMMsg*,NSError*)) completion onQueue:(dispatch_queue_t)queue {
 	[self.msgManager asyncSend:msg withCompletion:completion onQueue:queue];
 }
 

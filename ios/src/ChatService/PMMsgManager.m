@@ -10,17 +10,17 @@
 
 @property (nonatomic, strong) PMMsg *msg;
 
-@property (nonatomic, strong) void(^completion)(NSDictionary*, NSError *);
+@property (nonatomic, strong) void(^completion)(PMMsg*, NSError *);
 
 @property (nonatomic, strong) dispatch_queue_t queue;
 
-+(id) init:(PMMsg*)msg :(void(^)(NSDictionary*, NSError *))completion :(dispatch_queue_t)queue;
++(id) init:(PMMsg*)msg :(void(^)(PMMsg*, NSError *))completion :(dispatch_queue_t)queue;
 
 @end
 
 @implementation SendingHandle
 
-+(id) init:(PMMsg*)msg :(void(^)(NSDictionary*, NSError *))completion :(dispatch_queue_t)queue {
++(id) init:(PMMsg*)msg :(void(^)(PMMsg*, NSError *))completion :(dispatch_queue_t)queue {
 	SendingHandle *handle = [[SendingHandle alloc] init];
 	handle.msg = msg;
 	handle.completion = completion;
@@ -76,34 +76,34 @@
 
 }
 
--(NSDictionary*) send:(PMMsg*)msg {
+-(PMMsg*) send:(PMMsg*)msg {
 	return [self send:msg withError:nil];
 }
 
--(NSDictionary*) send:(PMMsg*)msg withError:(NSError**)err {
+-(PMMsg*) send:(PMMsg*)msg withError:(NSError**)err {
 	__block NSError *error;
-	__block NSDictionary *dict;
+	__block PMMsg *m;
 	dispatch_semaphore_t sema = dispatch_semaphore_create(0);
-	[self asyncSend:msg withCompletion:^(NSDictionary* rs, NSError* e){
-		if(e) error = e; else dict = rs;
+	[self asyncSend:msg withCompletion:^(PMMsg* rs, NSError* e){
+		if(e) error = e; else m = rs;
 		dispatch_semaphore_signal(sema);
 	}];
 	
 	dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
 	if(err && error) *err = error;
-	return dict;
+	return m;
 }
 
 -(void) asyncSend:(PMMsg*)msg {
 	[self asyncSend:msg withCompletion:nil];
 }
 
--(void) asyncSend:(PMMsg*)msg withCompletion:(void (^)(NSDictionary*,NSError*))completion{
+-(void) asyncSend:(PMMsg*)msg withCompletion:(void (^)(PMMsg*,NSError*))completion{
 	[self asyncSend:msg withCompletion:completion onQueue:_queue];
 }
 
 
--(void) asyncSend:(PMMsg*)msg withCompletion:(void (^)(NSDictionary*,NSError*))completion onQueue:(dispatch_queue_t)queue {
+-(void) asyncSend:(PMMsg*)msg withCompletion:(void (^)(PMMsg*,NSError*))completion onQueue:(dispatch_queue_t)queue {
 
 	if(msg == nil && completion) {
 		__block PMMsg* message = msg;
@@ -171,12 +171,12 @@
 - (void)webSocket:(SRWebSocket *)webSocket didReceiveMessage:(id)message {
 	NSError *err;
 	PMChat *chat = PMChat.sharedInstance;
-	__block NSDictionary *rs = [NSJSONSerialization JSONObjectWithData: [message dataUsingEncoding:NSUTF8StringEncoding] options: NSJSONReadingMutableContainers error: &err];
+	NSDictionary *rs = [NSJSONSerialization JSONObjectWithData: [message dataUsingEncoding:NSUTF8StringEncoding] options: NSJSONReadingMutableContainers error: &err];
 	if(err) {
 		[_ws closeWithCode:-1 reason:[NSString stringWithFormat:@"%@", err]];
 		return;
 	}
-	SendingHandle *handle;
+	__block SendingHandle *handle;
 	@synchronized(_sendingMsgs) {
 		handle = _sendingMsgs[rs[@"id"]];
 		if(handle)
@@ -190,16 +190,22 @@
 			[_ws close];
 			[self webSocket:_ws didCloseWithCode:-1 reason:rs[@"msg"] wasClean:true];
 		}
+		return;
 	}
 
 	if([rs[@"type"] intValue] == 252) {
 		if(handle) {
+			[chat.chatManager invokeDelegate:@"didSendMsg:%@error:%@", handle.msg, nil];
 			dispatch_async(handle.queue, ^{
-				handle.completion(rs, nil);
+				handle.completion(handle.msg, nil);
 			});
-		}	
+		}
+		return;
 	}
-
+	PMMsg *msg = [PMMsg fromDictionary:rs];
+	if(msg) {
+		[chat.chatManager invokeDelegate:@"didReceiveMsg:%@", msg];
+	}
 }
 
 - (void)webSocket:(SRWebSocket *)webSocket didCloseWithCode:(NSInteger)code reason:(NSString *)reason wasClean:(BOOL)wasClean; {

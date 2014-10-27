@@ -28,6 +28,22 @@
 
 @implementation PMMsg (Serial)
 
++(id) fromDictionary:(NSDictionary*)dict {
+	NSString *id = dict[@"id"];
+	NSNumber *to = dict[@"to"];
+	NSNumber *type = dict[@"type"];
+	if(to == nil || to.intValue == 0) {
+		return nil;
+	}
+	if(type == nil || type.intValue == 0) {
+		return nil;
+	}
+	PMMsg *msg  = [[PMMsg alloc] init];
+	msg.to = to.intValue;
+	msg.to = to.intValue;
+	return msg;
+}
+
 -(NSDictionary*) toDictionary {
 	NSMutableDictionary* dict = [[NSMutableDictionary alloc] init];
 	dict[@"id"] = self.id;

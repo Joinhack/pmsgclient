@@ -7,13 +7,13 @@
 
 @property (atomic) PMConnectStat connectState;
 
--(NSDictionary*) send:(PMMsg*)msg;
+-(PMMsg*) send:(PMMsg*)msg;
 
--(NSDictionary*) send:(PMMsg*)msg withError:(NSError**)err;
+-(PMMsg*) send:(PMMsg*)msg withError:(NSError**)err;
 
 -(void) asyncSend:(PMMsg*)msg;
 
--(void) asyncSend:(PMMsg*)msg withCompletion:(void (^)(NSDictionary*,NSError*)) completion;
+-(void) asyncSend:(PMMsg*)msg withCompletion:(void (^)(PMMsg*,NSError*)) completion;
 
 - (void)webSocketDidOpen:(SRWebSocket *)webSocket;
 
