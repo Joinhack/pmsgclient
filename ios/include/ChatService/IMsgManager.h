@@ -10,6 +10,9 @@ typedef enum  NSInteger {
 
 -(void) didReceiveMsg:(PMMsg*)msg;
 
+- (void)didSendMsg:(PMMsg *)msg
+                error:(NSError *)error;
+
 @end
 
 @class PMMsg;

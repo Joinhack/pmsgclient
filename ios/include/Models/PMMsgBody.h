@@ -4,15 +4,17 @@
 @class PMMsg;
 
 typedef enum : NSInteger {
-	PMTextMsgBodyType = 0,
+	PMTextMsgBodyType = 1,
 	PMImageMsgBodyType,
 	PMLocationMsgBodyType,
 	PMStickMsgBodyType
-} PMMsgType;
+} PMMsgBodyType;
 
 @protocol PMMsgBody <NSObject>
 
-@property (nonatomic) PMMsgType msgType;
+@property (nonatomic) PMMsgBodyType type;
+
+@property (nonatomic, weak) PMMsg* msg;
 
 @end
 
@@ -21,7 +23,7 @@ typedef enum : NSInteger {
 @interface PMMsgBody:NSObject <PMMsgBody> {
 }
 
-@property (nonatomic) PMMsgType msgType;
+@property (nonatomic) PMMsgBodyType type;
 
 @property (nonatomic, weak) PMMsg* msg;
 

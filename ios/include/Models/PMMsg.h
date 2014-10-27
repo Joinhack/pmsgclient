@@ -7,6 +7,10 @@
 
 @property (nonatomic, strong) NSString *id;
 
+@property (nonatomic) NSInteger to;
+
+@property (nonatomic) NSInteger type;
+
 @property (nonatomic, strong) NSArray *bodies;
 
 -(void) addMsgBody:(id<PMMsgBody>)body;

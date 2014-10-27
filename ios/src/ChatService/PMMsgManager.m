@@ -1,8 +1,34 @@
 #import <Models/PMMsg.h>
 #import <ChatService/IMsgManager.h>
 #import <pmsg.h>
+
 #import "../websocket/SRWebSocket.h"
 #import "PMMsgManager.h"
+#import "../Models/PMMsg+Serial.h"
+
+@interface SendingHandle : NSObject <NSObject>
+
+@property (nonatomic, strong) PMMsg *msg;
+
+@property (nonatomic, strong) void(^completion)(NSDictionary*, NSError *);
+
+@property (nonatomic, strong) dispatch_queue_t queue;
+
++(id) init:(PMMsg*)msg :(void(^)(NSDictionary*, NSError *))completion :(dispatch_queue_t)queue;
+
+@end
+
+@implementation SendingHandle
+
++(id) init:(PMMsg*)msg :(void(^)(NSDictionary*, NSError *))completion :(dispatch_queue_t)queue {
+	SendingHandle *handle = [[SendingHandle alloc] init];
+	handle.msg = msg;
+	handle.completion = completion;
+	handle.queue = queue;
+	return handle;
+}
+
+@end
 
 @implementation PMMsgManager {
 	SRWebSocket *_ws;
@@ -43,6 +69,8 @@
 	};
 	 _ws = [[SRWebSocket alloc] initWithURLRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:chat.wsUrl]]];
 	 _ws.delegate = self;
+
+	 _ws.delegateOperationQueue = chat.operationQueue;
 	 self.connectState = CONNECTING;
 	 [_ws open];
 
@@ -76,13 +104,17 @@
 
 
 -(void) asyncSend:(PMMsg*)msg withCompletion:(void (^)(NSDictionary*,NSError*))completion onQueue:(dispatch_queue_t)queue {
+
 	if(msg == nil && completion) {
+		__block PMMsg* message = msg;
 		dispatch_async(queue?queue:_queue, ^(){
-			completion(nil, [NSError errorWithDomain:@"PMMsg" code:-1 userInfo:@{@"detail":@"invaild msg"}]);
+			NSError *error = [NSError errorWithDomain:@"PMMsg" code:-1 userInfo:@{@"detail":@"invaild msg"}];
+			completion(nil, error);
+			[PMChat.sharedInstance.chatManager invokeDelegate:@"didSendMsg:%@error:%@", message, error];
 		});
 		return;
 	}
-	if (_connectState != CONNECTING) {
+	if (_connectState != CONNECTED) {
 		dispatch_queue_t q = queue?queue:_queue;
 		dispatch_async(q, ^(){
 			completion(nil, [NSError errorWithDomain:@"PMMsg" code:-1 userInfo:@{@"detail":@"connection is closed"}]);
@@ -93,14 +125,18 @@
 	__block dispatch_queue_t q = queue?queue:_queue;
 	__block NSString *msgId = msg.id;
 	@synchronized(_sendingMsgs) {
-		_sendingMsgs[msg.id] = msg;
+		_sendingMsgs[msg.id] = [SendingHandle init:msg :completion :q];
 	}
+
+	[_ws send:[msg toJson:nil]];
 	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 30 * NSEC_PER_SEC), q, ^{
 		@synchronized(_sendingMsgs) {
-			PMMsg *msg = _sendingMsgs[msgId];
+			SendingHandle *handle = _sendingMsgs[msgId];
+			[_sendingMsgs removeObjectForKey:msgId];
+			PMMsg *msg = handle.msg;
 			if(msg != nil && completion) {
 					dispatch_async(q, ^(){
-						completion(nil, [NSError errorWithDomain:@"PMMsg" code:-1 userInfo:@{@"detail":@"connection is closed"}]);
+						completion(nil, [NSError errorWithDomain:@"PMMsg" code:-1 userInfo:@{@"detail":@"send msg timeout."}]);
 					});
 			}
 
@@ -135,11 +171,18 @@
 - (void)webSocket:(SRWebSocket *)webSocket didReceiveMessage:(id)message {
 	NSError *err;
 	PMChat *chat = PMChat.sharedInstance;
-	NSDictionary *rs = [NSJSONSerialization JSONObjectWithData: [message dataUsingEncoding:NSUTF8StringEncoding] options: NSJSONReadingMutableContainers error: &err];
+	__block NSDictionary *rs = [NSJSONSerialization JSONObjectWithData: [message dataUsingEncoding:NSUTF8StringEncoding] options: NSJSONReadingMutableContainers error: &err];
 	if(err) {
 		[_ws closeWithCode:-1 reason:[NSString stringWithFormat:@"%@", err]];
 		return;
 	}
+	SendingHandle *handle;
+	@synchronized(_sendingMsgs) {
+		handle = _sendingMsgs[rs[@"id"]];
+		if(handle)
+			[_sendingMsgs removeObjectForKey:rs[@"id"]];
+	} 
+
 	if (_connectState == CONNECTING) {
 		if([rs[@"type"] intValue] == 255 && [rs[@"code"] intValue] == 0)
 			self.connectState = CONNECTED;
@@ -148,6 +191,15 @@
 			[self webSocket:_ws didCloseWithCode:-1 reason:rs[@"msg"] wasClean:true];
 		}
 	}
+
+	if([rs[@"type"] intValue] == 252) {
+		if(handle) {
+			dispatch_async(handle.queue, ^{
+				handle.completion(rs, nil);
+			});
+		}	
+	}
+
 }
 
 - (void)webSocket:(SRWebSocket *)webSocket didCloseWithCode:(NSInteger)code reason:(NSString *)reason wasClean:(BOOL)wasClean; {

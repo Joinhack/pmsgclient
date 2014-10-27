@@ -4,8 +4,6 @@
 
 @interface TestDelegate : NSObject <IChatManagerDelegate> {
 }
-
--(void)didLogin:(NSDictionary*)dict :(NSError*)err;
 @end
 
 @implementation TestDelegate {
@@ -16,6 +14,22 @@
 
 -(void) didConnectStateChange:(PMConnectStat)state from:(PMConnectStat)old {
 	NSLog(@"state %u %u", state, old);
+	NSError *err;
+	PMChat *chat = [PMChat sharedInstance];
+	if(state == 3 && old == 2) {
+		PMMsg *msg = [[PMMsg alloc] init];
+		msg.id = @"1";
+		msg.to = 3;
+		msg.type = 1;
+		[msg addMsgBody:[PMTextMsgBody msgBodyWithContent:@"hi"]];
+		[chat.chatManager send:msg withError:&err];
+		NSLog(@"error %@", err);
+	}
+}
+
+- (void)didSendMsg:(PMMsg *)msg
+                error:(NSError *)error {
+ 	NSLog(@"didSendMsg %@ %@", msg, error);               	
 }
 @end
 
@@ -36,8 +50,6 @@ int main() {
 			NSLog(@"%@", v);
 		}
 		err = nil;
-		[chat.chatManager send:nil withError:&err];
-		NSLog(@"error %@", err);
 		while([[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate distantFuture]]) {
 			
 		};

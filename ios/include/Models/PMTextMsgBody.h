@@ -4,7 +4,11 @@
 @interface PMTextMsgBody : PMMsgBody {
 }
 
-@property (nonatomic, strong) NSString *text;
+-(id)initWithContent:(NSString*)content;
+
++(id)msgBodyWithContent:(NSString*)content;
+
+@property (nonatomic, strong) NSString *content;
 
 @end
 
