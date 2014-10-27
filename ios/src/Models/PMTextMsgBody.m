@@ -5,6 +5,11 @@
 @implementation PMTextMsgBody:PMMsgBody {
 }
 
++(id)fromDictionary:(NSDictionary*)dict {
+	PMTextMsgBody *body = [PMTextMsgBody msgBodyWithContent:dict[@"content"]];
+	return body;
+}
+
 -(id)init {
 	self = [super init];
 	self.type = PMTextMsgBodyType;

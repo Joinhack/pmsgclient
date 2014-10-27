@@ -43,7 +43,7 @@
 	if(self) {
 		_connectState = CLOSED;
 		_sendingMsgs = [[NSMutableDictionary alloc] init];
-		_queue = dispatch_queue_create("pm.message.queue", NULL);		
+		_queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);		
 	}
 	return self;
 }
@@ -70,7 +70,7 @@
 	 _ws = [[SRWebSocket alloc] initWithURLRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:chat.wsUrl]]];
 	 _ws.delegate = self;
 
-	 _ws.delegateOperationQueue = chat.operationQueue;
+	 _ws.delegateDispatchQueue = _queue;
 	 self.connectState = CONNECTING;
 	 [_ws open];
 

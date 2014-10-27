@@ -1,5 +1,5 @@
 #import <Models/PMMsg.h>
-
+#import "PMMsgBody+Serial.h"
 @implementation PMMsg {
 	NSMutableArray *bodies;
 }
@@ -28,8 +28,9 @@
 
 @implementation PMMsg (Serial)
 
+
 +(id) fromDictionary:(NSDictionary*)dict {
-	NSString *id = dict[@"id"];
+	NSString *msgId = dict[@"id"];
 	NSNumber *to = dict[@"to"];
 	NSNumber *type = dict[@"type"];
 	if(to == nil || to.intValue == 0) {
@@ -40,7 +41,16 @@
 	}
 	PMMsg *msg  = [[PMMsg alloc] init];
 	msg.to = to.intValue;
-	msg.to = to.intValue;
+	if(dict[@"bodies"]) {
+		NSMutableArray *bodies = [[NSMutableArray alloc] init];
+		id msgBody;
+		for(NSDictionary *bodyDict in dict[@"bodies"]) {
+			msgBody = [PMMsgBody fromDictionary:bodyDict];
+			if(msgBody)
+				[bodies addObject:msgBody];
+		}
+		msg.bodies = bodies;
+	}
 	return msg;
 }
 
