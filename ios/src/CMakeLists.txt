@@ -12,6 +12,7 @@ SET(SRC_LIST pmsg.m
 	ChatService/PMChatManager.m
 	ChatService/PMLoginManager.m
 	ChatService/PMMsgManager.m
+	ChatService/PMDBManager.m
 	ChatService/NSMutableURLRequest+Post.m
 	Models/PMMsg.m
 	Models/PMMsgBody.m
@@ -27,6 +28,7 @@ ADD_LIBRARY(pmsg STATIC ${SRC_LIST})
 ADD_FRAMEWORK(pmsg Foundation)
 ADD_FRAMEWORK(pmsg CFNetwork)
 ADD_FRAMEWORK(pmsg Security)
+TARGET_LINK_LIBRARIES(pmsg sqlite3)
 
 set_target_properties(pmsg PROPERTIES
          ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
