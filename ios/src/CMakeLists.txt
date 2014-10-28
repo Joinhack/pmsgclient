@@ -16,6 +16,8 @@ SET(SRC_LIST pmsg.m
 	Models/PMMsg.m
 	Models/PMMsgBody.m
 	Models/PMTextMsgBody.m
+	Models/PMImageMsgBody.m
+	Models/PMLocationMsgBody.m
 )
 
 
