@@ -21,8 +21,6 @@ SET(SRC_LIST pmsg.m
 	Models/PMLocationMsgBody.m
 )
 
-
-
 ADD_LIBRARY(pmsg STATIC ${SRC_LIST})
 
 ADD_FRAMEWORK(pmsg Foundation)

@@ -9,6 +9,8 @@
 
 @property (nonatomic) NSInteger to;
 
+@property (nonatomic) NSInteger from;
+
 @property (nonatomic) NSInteger type;
 
 @property (nonatomic, strong) NSArray *bodies;
