@@ -21,6 +21,8 @@
 
 @property (atomic, copy) NSString* restUrl;
 
+@property (atomic, copy) NSString* dbPath;
+
 
 +(PMChat*) sharedInstance;
 

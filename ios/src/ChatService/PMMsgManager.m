@@ -4,6 +4,7 @@
 
 #import "../websocket/SRWebSocket.h"
 #import "PMMsgManager.h"
+#import "PMChatManager.h"
 #import "../Models/PMMsg+Serial.h"
 
 @interface SendingHandle : NSObject <NSObject>
@@ -35,6 +36,7 @@
 	PMConnectStat _connectState;
 	NSMutableDictionary *_sendingMsgs;
 	dispatch_queue_t _queue;
+	NSUInteger _seq;
 }
 
 
@@ -44,6 +46,7 @@
 		_connectState = CLOSED;
 		_sendingMsgs = [[NSMutableDictionary alloc] init];
 		_queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);		
+		_seq = 0;
 	}
 	return self;
 }
@@ -122,12 +125,24 @@
 		return;
 	}
 
+	PMChatManager *chatManager = PMChat.sharedInstance.chatManager;
+	msg.id = [NSString stringWithFormat:@"%ld", chatManager.seq];
+	msg.from = PMChat.sharedInstance.whoami.longValue;
 	__block dispatch_queue_t q = queue?queue:_queue;
 	__block NSString *msgId = msg.id;
 	@synchronized(_sendingMsgs) {
 		_sendingMsgs[msg.id] = [SendingHandle init:msg :completion :q];
 	}
-
+	__block NSError *err;
+	NSInteger rowid = [chatManager saveMsg:msg error:&err];
+	if(err) {
+		__block PMMsg* message = msg;
+		dispatch_async(queue?queue:_queue, ^(){
+			completion(nil, err);
+			[PMChat.sharedInstance.chatManager invokeDelegate:@"didSendMsg:%@error:%@", message, err];
+		});
+		return;
+	}
 	[_ws send:[msg toJson:nil]];
 	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 30 * NSEC_PER_SEC), q, ^{
 		@synchronized(_sendingMsgs) {

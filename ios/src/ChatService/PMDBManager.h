@@ -2,7 +2,10 @@
 #import <Models/PMMsg.h>
 
 @interface PMDBManager : NSObject <NSObject>
--(bool)createMsgTable:(NSInteger)type :(NSInteger)id;
+-(id)init:(NSString*)db;
 
--(long)saveMsg:(PMMsg*)msg;
+-(NSInteger)saveMsg:(PMMsg*)msg error:(NSError**)err;
+
+-(NSInteger)seq:(NSInteger)inMem;
+
 @end

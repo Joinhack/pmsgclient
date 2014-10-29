@@ -18,10 +18,9 @@
 	PMChat *chat = [PMChat sharedInstance];
 	if(state == 3 && old == 2) {
 		PMMsg *msg = [[PMMsg alloc] init];
-		msg.id = @"1";
 		msg.to = 2;
 		msg.type = 1;
-		[msg addMsgBody:[PMTextMsgBody msgBodyWithContent:@"hi"]];
+		[msg addMsgBody:[PMTextMsgBody msgBodyWithContent:@"mmmmmm"]];
 		[chat.chatManager send:msg withError:&err];
 		NSLog(@"error %@", err);
 	}
@@ -42,6 +41,7 @@ int main() {
 		PMChat *chat = [PMChat sharedInstance];
 		chat.restUrl = @"http://localhost:8000";
 		chat.wsUrl = @"http://localhost:8000";
+		chat.dbPath = @"/Volumes/joinhack/Downloads/test.db";
 		NSError*  err = nil;
 		id<IChatManager> cm = [chat chatManager];
 		TestDelegate *delegate = [[TestDelegate alloc] init];

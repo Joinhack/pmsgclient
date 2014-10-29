@@ -5,6 +5,7 @@
 #import <pmsg.h>
 #import "PMChatManager.h"
 #import "PMMsgManager.h"
+#import "PMDBManager.h"
 
 @implementation DelegatePair {
 }
@@ -21,13 +22,28 @@
 @implementation PMChatManager {
 	PMLoginManager* _loginManager;
 	PMMsgManager* _msgManager;
+	PMDBManager* _dbManager;
 	NSMutableArray *_delegates;
+	NSInteger _seq;
 }
 
 -(id) init {
 	self = [super init];
-	_delegates = [[NSMutableArray alloc] init];
+	if(self) {
+		_delegates = [[NSMutableArray alloc] init];
+		_seq = 0;
+	}
 	return self;
+}
+
+-(PMDBManager*) dbManager {
+	if(_dbManager) return _dbManager;
+	if(PMChat.sharedInstance.dbPath == nil) return nil;
+	@synchronized(self) {
+		if(_dbManager) return _dbManager;
+		_dbManager = [[PMDBManager alloc] init:PMChat.sharedInstance.dbPath];
+	}
+	return _dbManager;
 }
 
 -(PMLoginManager*) loginManager {
@@ -162,6 +178,25 @@
 
 -(void) asyncSend:(PMMsg*)msg withCompletion:(void (^)(PMMsg*,NSError*)) completion onQueue:(dispatch_queue_t)queue {
 	[self.msgManager asyncSend:msg withCompletion:completion onQueue:queue];
+}
+
+-(NSInteger)saveMsg:(PMMsg*)msg error:(NSError**)err {
+	PMDBManager *db = self.dbManager;
+	if(db)
+		return [db saveMsg:msg error:err];
+	return 0;
+}
+
+-(NSInteger)seq {
+	@synchronized(self) {
+		PMDBManager *db = self.dbManager;
+
+		if(db)
+			_seq = [db seq:_seq ];
+		else 
+			_seq++;
+		return _seq;
+	}
 }
 
 @end

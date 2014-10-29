@@ -14,6 +14,7 @@
 }
 
 -(NSDictionary*) login:(NSString*)user :(NSString*)passwd;
+
 -(NSDictionary*) login:(NSString*)user :(NSString*)passwd withError:(NSError**) err;
 
 -(void) asyncLogin:(NSString*)user :(NSString*)passwd;
@@ -27,6 +28,10 @@
 -(void)addDelegate:(id<IChatManagerDelegate>)delegate :(dispatch_queue_t)queue;
 
 -(void)removeDelegate:(id<IChatManagerDelegate>)delegate;
+
+-(NSInteger)saveMsg:(PMMsg*)msg error:(NSError**)err;
+
+-(NSInteger)seq;
 
 @end
 
