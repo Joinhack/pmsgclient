@@ -134,7 +134,7 @@
 		_sendingMsgs[msg.id] = [SendingHandle init:msg :completion :q];
 	}
 	__block NSError *err;
-	NSInteger rowid = [chatManager saveMsg:msg error:&err];
+	[chatManager saveMsg:msg error:&err];
 	if(err) {
 		__block PMMsg* message = msg;
 		dispatch_async(queue?queue:_queue, ^(){
@@ -143,6 +143,8 @@
 		});
 		return;
 	}
+	NSLog(@"from %d", msg.from);
+	msg.state = 1;
 	[_ws send:[msg toJson:nil]];
 	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 30 * NSEC_PER_SEC), q, ^{
 		@synchronized(_sendingMsgs) {
@@ -211,7 +213,16 @@
 	if([rs[@"type"] intValue] == 252) {
 		if(handle) {
 			[chat.chatManager invokeDelegate:@"didSendMsg:%@error:%@", handle.msg, nil];
+			__block NSString* nId = rs[@"nid"];
 			dispatch_async(handle.queue, ^{
+				NSError *err;
+				PMChatManager *chatManager = chat.chatManager;
+				if(nId) {
+					handle.msg.id = nId;
+					handle.msg.state = 2;
+					[chatManager updateMsg:handle.msg withNewId:nId error:&err];
+				}
+				if(err) NSLog(@"%@", err);
 				handle.completion(handle.msg, nil);
 			});
 		}
@@ -219,6 +230,7 @@
 	}
 	PMMsg *msg = [PMMsg fromDictionary:rs];
 	if(msg) {
+		msg.state = 2;
 		[chat.chatManager invokeDelegate:@"didReceiveMsg:%@", msg];
 	}
 }

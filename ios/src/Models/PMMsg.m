@@ -2,9 +2,18 @@
 #import "PMMsgBody+Serial.h"
 @implementation PMMsg {
 	NSMutableArray *bodies;
+	NSUInteger rowid;
 }
 
 @synthesize bodies = bodies;
+
+-(NSUInteger) rowid {
+	return rowid;
+}
+
+-(void) setRowid:(NSUInteger)rid {
+	rowid = rid;
+}
 
 -(id)init {
 	bodies = [[NSMutableArray alloc] init];
@@ -59,6 +68,7 @@
 	dict[@"id"] = self.id;
 	dict[@"type"] = [NSNumber numberWithInt:self.type];
 	dict[@"to"] = [NSNumber numberWithInt:self.to];
+	dict[@"from"] = [NSNumber numberWithInt:self.from];
 	if(bodies) {
 		NSMutableArray *array = [[NSMutableArray alloc] init];
 		for(id body in bodies) {

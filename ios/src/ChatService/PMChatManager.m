@@ -180,10 +180,17 @@
 	[self.msgManager asyncSend:msg withCompletion:completion onQueue:queue];
 }
 
--(NSInteger)saveMsg:(PMMsg*)msg error:(NSError**)err {
+-(NSUInteger)saveMsg:(PMMsg*)msg error:(NSError**)err {
 	PMDBManager *db = self.dbManager;
 	if(db)
 		return [db saveMsg:msg error:err];
+	return 0;
+}
+
+-(NSInteger)updateMsg:(PMMsg*)msg withNewId:(NSString*)nid error:(NSError**)err {
+	PMDBManager *db = self.dbManager;
+	if(db)
+		return [db updateMsg:msg withNewId:nid error:err];
 	return 0;
 }
 

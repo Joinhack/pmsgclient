@@ -29,7 +29,9 @@
 
 -(void)removeDelegate:(id<IChatManagerDelegate>)delegate;
 
--(NSInteger)saveMsg:(PMMsg*)msg error:(NSError**)err;
+-(NSUInteger)saveMsg:(PMMsg*)msg error:(NSError**)err;
+
+-(NSInteger)updateMsg:(PMMsg*)msg withNewId:(NSString*)nid error:(NSError**)err;
 
 -(NSInteger)seq;
 

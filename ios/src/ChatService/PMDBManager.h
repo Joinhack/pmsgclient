@@ -4,7 +4,9 @@
 @interface PMDBManager : NSObject <NSObject>
 -(id)init:(NSString*)db;
 
--(NSInteger)saveMsg:(PMMsg*)msg error:(NSError**)err;
+-(NSUInteger)saveMsg:(PMMsg*)msg error:(NSError**)err;
+
+-(NSInteger)updateMsg:(PMMsg*)msg withNewId:(NSString*)nid  error:(NSError**)error;
 
 -(NSInteger)seq:(NSInteger)inMem;
 

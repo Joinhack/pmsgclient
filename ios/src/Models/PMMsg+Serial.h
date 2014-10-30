@@ -7,3 +7,7 @@
 
 -(NSDictionary*) toDictionary;
 @end
+
+@interface PMMsg (Persistent) 
+@property NSUInteger rowid;
+@end

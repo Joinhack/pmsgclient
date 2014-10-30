@@ -13,6 +13,8 @@
 
 @property (nonatomic) NSInteger type;
 
+@property (nonatomic) uint8_t state;
+
 @property (nonatomic, strong) NSArray *bodies;
 
 -(void) addMsgBody:(id<PMMsgBody>)body;
