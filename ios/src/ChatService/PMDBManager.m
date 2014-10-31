@@ -78,7 +78,7 @@
 
 -(NSString*) tabName:(PMMsg*)msg {
 	NSString *tabName;
-	tabName = [NSString stringWithFormat:@"%@_%ld", msg.type==1?@"user":@"group", msg.to == self.whoami?msg.from:msg.to];
+	tabName = [NSString stringWithFormat:@"%@_%ld", msg.type==1?@"user":@"group", msg.from == self.whoami?msg.to:msg.from];
 	return tabName;
 }
 
@@ -104,7 +104,6 @@
 		err = [self tableCheck:@"seq" :^{return @"create table seq(seq Integer default 1, name text);";}];
 		if(err) return ++inMem;
 		__block NSInteger mval = inMem;
-		id me = self;
 		[self execute:@"select seq from seq where name='seq';" withCallback:^(sqlite3_stmt* stmt, NSError** e) {
 			if(sqlite3_step(stmt) == SQLITE_ROW) {
 				NSInteger val = sqlite3_column_int(stmt, 0);
@@ -112,9 +111,9 @@
 					mval = val;
 				mval++;
 
-				[me execute:[NSString stringWithFormat:@"update seq set seq=%ld where name='seq';", mval] error:nil];
+				[self execute:[NSString stringWithFormat:@"update seq set seq=%ld where name='seq';", mval] error:nil];
 			} else {
-				[me execute:[NSString stringWithFormat:@"insert into seq values(%ld, 'seq')", ++mval] error:nil];
+				[self execute:[NSString stringWithFormat:@"insert into seq values(%ld, 'seq')", ++mval] error:nil];
 			}
 			return SQLITE_DONE;
 		} error:nil];

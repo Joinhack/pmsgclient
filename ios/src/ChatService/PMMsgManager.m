@@ -143,7 +143,6 @@
 		});
 		return;
 	}
-	NSLog(@"from %d", msg.from);
 	msg.state = 1;
 	[_ws send:[msg toJson:nil]];
 	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 30 * NSEC_PER_SEC), q, ^{
