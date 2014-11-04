@@ -65,8 +65,7 @@
 		[[chat chatManager] reconnect];
 FINISH:
 		[[chat chatManager] invokeDelegate:@"didLogin:%@:%@", dict, error];
-		if(completion)
-			completion(dict, error);
+		if(completion) completion(dict, error);
 	} failure:^(AFHTTPRequestOperation *o, NSError *e){
 		if(completion) completion(nil, e);
 	}];
