@@ -8,19 +8,24 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(${CMAKE_SOURCE_DIR}/deps/AFNetworking/AFNetworking)
 include_directories(${CMAKE_SOURCE_DIR}/src)
 
-SET(SRC_LIST pmsg.m 
-	websocket/SRWebSocket.m
-	ChatService/PMChatManager.m
-	ChatService/PMLoginManager.m
-	ChatService/PMMsgManager.m
-	ChatService/PMDBManager.m
-	ChatService/NSMutableURLRequest+Post.m
-	Models/PMMsg.m
-	Models/PMMsgBody.m
-	Models/PMTextMsgBody.m
-	Models/PMImageMsgBody.m
-	Models/PMLocationMsgBody.m
+file(GLOB ChatServiceSRC "ChatService/*.m")
+FOREACH(
+file ${ChatServiceSRC}
 )
+SET(SRC_LIST ${SRC_LIST} ${file})
+ENDFOREACH()
+
+file(GLOB ModelsSRC "Models/*.m")
+FOREACH(
+file ${ModelsSRC}
+)
+SET(SRC_LIST ${SRC_LIST} ${file})
+ENDFOREACH()
+
+SET(SRC_LIST ${SRC_LIST} pmsg.m 
+	websocket/SRWebSocket.m
+)
+
 
 ADD_LIBRARY(pmsg STATIC ${SRC_LIST})
 

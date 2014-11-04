@@ -61,7 +61,6 @@
 		chat.whoami = dict[@"id"];
 		chat.name = dict[@"name"];
 		chat.password = _password;
-		
 		[[chat chatManager] reconnect];
 FINISH:
 		[[chat chatManager] invokeDelegate:@"didLogin:%@:%@", dict, error];
