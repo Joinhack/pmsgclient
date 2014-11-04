@@ -5,6 +5,7 @@ SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fobjc-arc ")
 
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
+include_directories(${CMAKE_SOURCE_DIR}/deps/AFNetworking/AFNetworking)
 include_directories(${CMAKE_SOURCE_DIR}/src)
 
 SET(SRC_LIST pmsg.m 
@@ -23,10 +24,13 @@ SET(SRC_LIST pmsg.m
 
 ADD_LIBRARY(pmsg STATIC ${SRC_LIST})
 
-ADD_FRAMEWORK(pmsg Foundation)
-ADD_FRAMEWORK(pmsg CFNetwork)
-ADD_FRAMEWORK(pmsg Security)
+
+add_dependencies(pmsg AFNetworking)
+
+target_link_libraries(pmsg -L${CMAKE_SOURCE_DIR}/lib AFNetworking)
+
 TARGET_LINK_LIBRARIES(pmsg sqlite3)
+
 
 set_target_properties(pmsg PROPERTIES
          ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)

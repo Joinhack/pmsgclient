@@ -2,7 +2,6 @@
 #import "ILoginManager.h"
 #import "IMsgManager.h"
 
-
 @protocol IChatManagerDelegate <ILoginManagerDelegate>
 @end
 

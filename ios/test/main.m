@@ -46,7 +46,7 @@ int main() {
 		id<IChatManager> cm = [chat chatManager];
 		TestDelegate *delegate = [[TestDelegate alloc] init];
 		[cm addDelegate:delegate :nil];
-		id v = [[chat chatManager] login:@"join2" :@"111111"  withError:&err];
+		id v = [[chat chatManager] login:@"join" :@"111111"  withError:&err];
 		if(err) {
 			NSLog(@"error %@", err);
 			return -1;

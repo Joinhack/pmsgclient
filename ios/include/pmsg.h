@@ -28,8 +28,8 @@
 
 -(id<IChatManager>) chatManager;
 
--(NSOperationQueue*) operationQueue;
+-(dispatch_queue_t) defaultQueue;
 
--(void) setOperationQueue:(NSOperationQueue*)q;
+-(void) setDefaultQueue:(dispatch_queue_t)q;
 
 @end

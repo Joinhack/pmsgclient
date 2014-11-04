@@ -19,4 +19,37 @@
 	[self setHTTPBody:postData];
 	return self;
 }
+
+-(id)initWithURL:(NSURL*)url withFileData:(NSData*)fdata withFileName:(NSString*)fileName withFieldName:(NSString*)fieldName withParams:(NSDictionary*)param {
+	NSMutableURLRequest *request = [[NSMutableURLRequest alloc] init];
+	[request setURL:url];
+	[request setHTTPMethod:@"POST"];
+
+	NSMutableData *body = [NSMutableData data];
+
+	NSString *boundary = @"--A-PMMsg(0.1)-14737809831466499882746641449";
+	NSString *endBoundary = [NSString stringWithFormat:@"\r\n--%@\r\n", boundary];
+	NSString *contentType = [NSString stringWithFormat:@"multipart/form-data; boundary=%@", boundary];
+	[request addValue:contentType forHTTPHeaderField:@"Content-Type"];
+
+	if(param) {
+		for(NSString *key in param) {
+			[body appendData:[[NSString stringWithFormat:@"--%@\r\n", boundary] dataUsingEncoding:NSUTF8StringEncoding]];
+			[body appendData:[[NSString stringWithFormat:@"Content-Type: form-data; name=\"%@\"\r\n\r\n%@\r\n" , key, param[key]]  dataUsingEncoding:NSUTF8StringEncoding]];
+		}
+	}
+	//The file to upload
+	[body appendData:[[NSString stringWithFormat:@"--%@\r\n", boundary] dataUsingEncoding:NSUTF8StringEncoding]];
+	[body appendData:[[NSString stringWithFormat:@"Content-Disposition: attachment; name=\"%@\"; filename=\"%@\"\r\n", fieldName, fileName] dataUsingEncoding:NSUTF8StringEncoding]];
+	[body appendData:[@"Content-Type: application/octet-stream\r\n\r\n" dataUsingEncoding:NSUTF8StringEncoding]];
+	[body appendData:[NSData dataWithData:fdata]];
+	[body appendData:[@"\r\n" dataUsingEncoding:NSUTF8StringEncoding]];
+
+	// close the form
+	[body appendData:[[NSString stringWithFormat:@"--%@--\r\n", boundary] dataUsingEncoding:NSUTF8StringEncoding]];
+
+	// set request body
+	[request setHTTPBody:body];
+	return self;
+}
 @end

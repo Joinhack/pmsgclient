@@ -6,6 +6,8 @@
 #import "PMChatManager.h"
 #import "PMMsgManager.h"
 #import "PMDBManager.h"
+#import "PMFileManager.h"
+
 
 @implementation DelegatePair {
 }
@@ -152,7 +154,7 @@
 	[self.loginManager asyncLogin:user :passwd withCompletion:completion];
 }
 
--(void) asyncLogin:(NSString*)user :(NSString*)passwd withCompletion:(void (^)(NSDictionary*,NSError*))completion onQueue:(NSOperationQueue*)q {
+-(void) asyncLogin:(NSString*)user :(NSString*)passwd withCompletion:(void (^)(NSDictionary*,NSError*))completion onQueue:(dispatch_queue_t)q {
 	[self.loginManager asyncLogin:user :passwd withCompletion:completion onQueue:q];
 }
 

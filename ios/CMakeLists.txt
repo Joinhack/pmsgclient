@@ -20,6 +20,8 @@ macro(ADD_FRAMEWORK appname fwname)
     endif()
 endmacro(ADD_FRAMEWORK)
 
+include(${CMAKE_SOURCE_DIR}/cmake/AFNetworking.cmake)
+
 add_subdirectory(src)
 add_subdirectory(test)
 

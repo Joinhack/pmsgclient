@@ -45,7 +45,7 @@
 	if(self) {
 		_connectState = CLOSED;
 		_sendingMsgs = [[NSMutableDictionary alloc] init];
-		_queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);		
+		_queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);		
 		_seq = 0;
 	}
 	return self;

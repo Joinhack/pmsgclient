@@ -5,7 +5,7 @@
 @implementation PMChat {
 	PMChatManager *manager;
 	dispatch_once_t once;
-	NSOperationQueue* oq;
+	dispatch_queue_t oq;
 }
 
 @synthesize wsUrl = wsUrl;
@@ -29,16 +29,16 @@
 	return manager;
 }
 
--(NSOperationQueue*) operationQueue {
+-(dispatch_queue_t) defaultQueue {
 	if(oq) return oq;
 	@synchronized(self) {
 		if(oq) return oq;
-		oq = [[NSOperationQueue alloc] init];
+		oq = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
 		return oq;
 	}
 }
 
--(void) setOperationQueue:(NSOperationQueue*)q {
+-(void) setDefaultQueue:(dispatch_queue_t)q {
 	@synchronized(self) {
 		oq = q;
 	}

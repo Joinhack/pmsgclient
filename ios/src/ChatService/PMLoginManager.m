@@ -1,4 +1,5 @@
 #import <pmsg.h>
+#import <AFNetworking.h>
 #import "PMLoginManager.h"
 #import "NSMutableURLRequest+Post.h"
 
@@ -32,41 +33,43 @@
 }
 
 -(void) asyncLogin:(NSString*)user :(NSString*)passwd withCompletion:(void (^)(NSDictionary*,NSError*))completion {
-	[self asyncLogin:user :passwd withCompletion:completion onQueue:[[PMChat sharedInstance] operationQueue]];
+	[self asyncLogin:user :passwd withCompletion:completion onQueue:PMChat.sharedInstance.defaultQueue];
 }
 
--(void) asyncLogin:(NSString*)user :(NSString*)passwd withCompletion:(void (^)(NSDictionary*,NSError*)) completion onQueue:(NSOperationQueue*)queue {
+-(void) asyncLogin:(NSString*)user :(NSString*)passwd withCompletion:(void (^)(NSDictionary*,NSError*)) completion onQueue:(dispatch_queue_t)queue {
+	
 	PMChat *chat = [PMChat sharedInstance];
 	NSString *loginUrl = [chat.restUrl stringByAppendingString:@"/user/login"];
 	NSURL *url = [[NSURL alloc] initWithString:loginUrl];
-	NSMutableURLRequest *req = [[NSMutableURLRequest alloc] initWithURL:url withParams:@{@"name": user, @"password":passwd}];
 	__block NSString* _password = passwd;
-	[NSURLConnection sendAsynchronousRequest:req queue:queue completionHandler:^(NSURLResponse *response, NSData *data, NSError *error) {
-		NSDictionary *dict = nil;
-		if(!error) {
-			dict = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:&error];
-			if(!dict[@"code"]) {
-				error = [NSError errorWithDomain:@"Login" code:-1 userInfo:@{@"detail":@"error format"}];
-				goto FINISH;
-			}
-			if(![dict[@"code"] isEqual:[NSNumber numberWithInt:0]]) {
-				error = [NSError errorWithDomain:@"Login" code:-1 userInfo:@{@"detail":@"error code"}];
-				goto FINISH;
-			}
-			chat.whoami = dict[@"id"];
-			chat.name = dict[@"name"];
-			chat.password = _password;
 
-			NSArray *cookies = [NSHTTPCookie cookiesWithResponseHeaderFields:[(NSHTTPURLResponse*)response allHeaderFields] forURL:[NSURL URLWithString:loginUrl]];
-			
-			[[chat chatManager] reconnect];
+	AFHTTPRequestOperationManager *manager = [AFHTTPRequestOperationManager manager];
+	if(queue == nil) queue = PMChat.sharedInstance.defaultQueue;
+	manager.completionQueue = queue;
+	manager.responseSerializer = [AFJSONResponseSerializer serializer];
+	AFHTTPRequestOperation *post = [manager POST:loginUrl parameters:@{@"name": user, @"password":passwd} success:^(AFHTTPRequestOperation *operation, id responseObject) {
+		NSError *error;
+    NSDictionary *dict = responseObject;
+    if(!dict[@"code"]) {
+			error = [NSError errorWithDomain:@"Login" code:-1 userInfo:@{@"detail":@"error format"}];
+			goto FINISH;
 		}
+		if(![dict[@"code"] isEqual:[NSNumber numberWithInt:0]]) {
+			error = [NSError errorWithDomain:@"Login" code:-1 userInfo:@{@"detail":@"error code"}];
+			goto FINISH;
+		}
+		chat.whoami = dict[@"id"];
+		chat.name = dict[@"name"];
+		chat.password = _password;
+		
+		[[chat chatManager] reconnect];
 FINISH:
 		[[chat chatManager] invokeDelegate:@"didLogin:%@:%@", dict, error];
 		if(completion)
 			completion(dict, error);
+	} failure:^(AFHTTPRequestOperation *o, NSError *e){
+		if(completion) completion(nil, e);
 	}];
-
 }
 
 

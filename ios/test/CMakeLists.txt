@@ -17,5 +17,7 @@ add_dependencies(main pmsg)
 ADD_FRAMEWORK(main Foundation)
 ADD_FRAMEWORK(main CFNetwork)
 ADD_FRAMEWORK(main Security)
+ADD_FRAMEWORK(main Cocoa)
+ADD_FRAMEWORK(main SystemConfiguration)
 
 target_link_libraries(main -L${CMAKE_SOURCE_DIR}/lib pmsg)
