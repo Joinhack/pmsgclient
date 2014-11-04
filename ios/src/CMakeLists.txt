@@ -8,23 +8,15 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(${CMAKE_SOURCE_DIR}/deps/AFNetworking/AFNetworking)
 include_directories(${CMAKE_SOURCE_DIR}/src)
 
-file(GLOB ChatServiceSRC "ChatService/*.m")
+file(GLOB FILES "Models/*.m" "websocket/*.m" "ChatService/*.m")
 FOREACH(
-file ${ChatServiceSRC}
+file ${FILES}
 )
 SET(SRC_LIST ${SRC_LIST} ${file})
 ENDFOREACH()
 
-file(GLOB ModelsSRC "Models/*.m")
-FOREACH(
-file ${ModelsSRC}
-)
-SET(SRC_LIST ${SRC_LIST} ${file})
-ENDFOREACH()
 
-SET(SRC_LIST ${SRC_LIST} pmsg.m 
-	websocket/SRWebSocket.m
-)
+SET(SRC_LIST ${SRC_LIST} pmsg.m)
 
 
 ADD_LIBRARY(pmsg STATIC ${SRC_LIST})
