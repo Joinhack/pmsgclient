@@ -1,6 +1,6 @@
 #import <Models/PMMsgBody.h>
 
-@interface PMMsgBody (Serial)
+@interface PMMsgBody (Inner)
 
 +(id)fromDictionary:(NSDictionary*)dict;
 

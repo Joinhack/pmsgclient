@@ -5,7 +5,7 @@
 #import "../websocket/SRWebSocket.h"
 #import "PMMsgManager.h"
 #import "PMChatManager.h"
-#import "../Models/PMMsg+Serial.h"
+#import "../Models/PMMsg+Inner.h"
 
 @interface SendingHandle : NSObject <NSObject>
 

@@ -1,5 +1,5 @@
 #import <Models/PMMsg.h>
-#import "PMMsgBody+Serial.h"
+#import "PMMsgBody+Inner.h"
 @implementation PMMsg {
 	NSMutableArray *bodies;
 	NSUInteger rowid;

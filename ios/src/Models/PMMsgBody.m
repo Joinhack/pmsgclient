@@ -1,5 +1,5 @@
-#import "PMMsgBody+Serial.h"
-#import "PMTextMsgBody+Serial.h"
+#import "PMMsgBody+Inner.h"
+#import "PMTextMsgBody+Inner.h"
 
 @implementation PMMsgBody
 

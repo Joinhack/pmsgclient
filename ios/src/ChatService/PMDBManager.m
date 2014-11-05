@@ -1,7 +1,7 @@
 #import "PMDBManager.h"
 #import <sqlite3.h>
 #import <pmsg.h>
-#import "../Models/PMMsg+Serial.h"
+#import "../Models/PMMsg+Inner.h"
 
 #define BCHECK(s) if(s != SQLITE_OK) return SQLITE_ERROR
 
