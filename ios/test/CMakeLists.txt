@@ -21,3 +21,5 @@ ADD_FRAMEWORK(main Cocoa)
 ADD_FRAMEWORK(main SystemConfiguration)
 
 target_link_libraries(main -L${CMAKE_SOURCE_DIR}/lib pmsg)
+target_link_libraries(main pthread)
+

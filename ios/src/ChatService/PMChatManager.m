@@ -24,6 +24,7 @@
 @implementation PMChatManager {
 	PMLoginManager* _loginManager;
 	PMMsgManager* _msgManager;
+	PMFileManager* _fileManager;
 	PMDBManager* _dbManager;
 	NSMutableArray *_delegates;
 	NSInteger _seq;
@@ -55,6 +56,15 @@
 		_loginManager = [[PMLoginManager alloc] init];
 	}
 	return _loginManager;
+}
+
+-(PMFileManager*) fileManager {
+	if(_fileManager) return _fileManager;
+	@synchronized(self) {
+		if(_fileManager) return _fileManager;
+		_fileManager = [[PMFileManager alloc] init];
+	}
+	return _fileManager;
 }
 
 -(PMMsgManager*) msgManager {
@@ -174,11 +184,22 @@
 	[self.msgManager asyncSend:msg];
 }
 
--(void) asyncSend:(PMMsg*)msg withCompletion:(void (^)(PMMsg*,NSError*)) completion {
+-(void) asyncSend:(PMMsg*)msg withCompletion:(void (^)(PMMsg*,NSError*))completion {
 	[self.msgManager asyncSend:msg withCompletion:completion];
 }
 
--(void) asyncSend:(PMMsg*)msg withCompletion:(void (^)(PMMsg*,NSError*)) completion onQueue:(dispatch_queue_t)queue {
+-(void) asyncSend:(PMMsg*)msg withCompletion:(void (^)(PMMsg*,NSError*))completion onQueue:(dispatch_queue_t)queue {
+	[self.msgManager asyncSend:msg withCompletion:completion onQueue:queue];
+}
+
+-(void) asyncSend:(PMMsg*)msg withCompletion:(void (^)(PMMsg*,NSError*))completion withProgress:(void(^)(NSUInteger, NSUInteger, NSUInteger))progress onQueue:(dispatch_queue_t)queue {
+	if(msg.bodies) {
+		for(int i = 0; i < msg.bodies.count; i++) {
+			id<PMMsgBody> body = msg.bodies[i];
+			if(body.type == PMImageMsgBodyType) {
+			}
+		}
+	}
 	[self.msgManager asyncSend:msg withCompletion:completion onQueue:queue];
 }
 

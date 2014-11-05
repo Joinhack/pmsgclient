@@ -1,7 +1,6 @@
 #import <pmsg.h>
 #import <AFNetworking.h>
 #import "PMLoginManager.h"
-#import "NSMutableURLRequest+Post.h"
 
 
 @implementation PMLoginManager {

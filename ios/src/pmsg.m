@@ -33,7 +33,7 @@
 	if(oq) return oq;
 	@synchronized(self) {
 		if(oq) return oq;
-		oq = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+		oq = dispatch_queue_create("pmsg.default.queue", DISPATCH_QUEUE_CONCURRENT);
 		return oq;
 	}
 }
