@@ -2,6 +2,7 @@
 #import <Models/PMMsg.h>
 #import <Models/PMMsgBody.h>
 #import <Models/PMTextMsgBody.h>
+#import <Models/PMImageMsgBody.h>
 #import <ChatService/IChatManager.h>
 
 #define NullValue(v) v?v:[NSNull null]

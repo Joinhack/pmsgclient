@@ -7,6 +7,7 @@
 #import "PMMsgManager.h"
 #import "PMDBManager.h"
 #import "PMFileManager.h"
+#import "../Models/PMImageMsgBody+Inner.h"
 
 
 @implementation DelegatePair {
@@ -189,18 +190,38 @@
 }
 
 -(void) asyncSend:(PMMsg*)msg withCompletion:(void (^)(PMMsg*,NSError*))completion onQueue:(dispatch_queue_t)queue {
-	[self.msgManager asyncSend:msg withCompletion:completion onQueue:queue];
+	[self asyncSend:msg withCompletion:completion withProgress:nil onQueue:queue];
 }
 
 -(void) asyncSend:(PMMsg*)msg withCompletion:(void (^)(PMMsg*,NSError*))completion withProgress:(void(^)(NSUInteger, NSUInteger, NSUInteger))progress onQueue:(dispatch_queue_t)queue {
-	if(msg.bodies) {
-		for(int i = 0; i < msg.bodies.count; i++) {
-			id<PMMsgBody> body = msg.bodies[i];
-			if(body.type == PMImageMsgBodyType) {
+	if(queue == nil) queue = PMChat.sharedInstance.defaultQueue;
+	dispatch_async(queue, ^{
+		if(msg.bodies) {
+			dispatch_semaphore_t sema = dispatch_semaphore_create(0);
+			__block NSError *err;
+			for(int i = 0; i < msg.bodies.count; i++) {
+				id<PMMsgBody> body = msg.bodies[i];
+				if(body.type == PMImageMsgBodyType) {
+					PMImageMsgBody *imgBody = body;
+					if(imgBody.isLocalUrl) {
+						[self.fileManager uploadImage:imgBody.url withProgress:^(NSUInteger i,long long n,long long t){
+						} 
+						completion:^(NSDictionary* d, NSError* e){
+							if(e) err = e;
+							dispatch_semaphore_signal(sema);
+							NSLog(@"~~~!%@", d);
+						} onQueue:queue];
+						dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
+						if(err) {
+							completion(nil, err);
+							return;
+						}
+					}
+				}
 			}
 		}
-	}
-	[self.msgManager asyncSend:msg withCompletion:completion onQueue:queue];
+		[self.msgManager asyncSend:msg withCompletion:completion onQueue:queue];
+	});
 }
 
 -(NSUInteger)saveMsg:(PMMsg*)msg error:(NSError**)err {

@@ -27,7 +27,7 @@
 }
 
 -(void)uploadFile:(NSString*)fileName data:(NSData*)data parameters:(NSDictionary*)parameters withProgress:(void(^)(NSUInteger,long long,long long))progress success:(void(^)(AFHTTPRequestOperation *, id ))success failure:(void(^)(AFHTTPRequestOperation *, NSError *))failure onQueue:(dispatch_queue_t)queue {
-	NSString* url = [NSString stringWithFormat:@"%@/fileupload",PMChat.sharedInstance.restUrl];
+	NSString* url = [NSString stringWithFormat:@"%@/file/upload",PMChat.sharedInstance.restUrl];
 	AFHTTPRequestSerializer *serializer = [AFHTTPRequestSerializer serializer];
 	NSMutableURLRequest *request = [serializer multipartFormRequestWithMethod:@"POST" URLString:url parameters:parameters constructingBodyWithBlock: ^(id <AFMultipartFormData>formData) {
     	[formData appendPartWithFileData:data name:@"file" fileName:fileName mimeType:@"application/octet-stream"];

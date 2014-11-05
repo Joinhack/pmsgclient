@@ -3,6 +3,7 @@
 
 
 @implementation PMImageMsgBody:PMMsgBody {
+	BOOL _isLocalUrl;
 }
 
 +(id)fromDictionary:(NSDictionary*)dict {
@@ -15,8 +16,24 @@
 
 -(id)init {
 	self = [super init];
+	_isLocalUrl = NO;
 	self.type = PMImageMsgBodyType;
 	return self;
+}
+
++(id)localFile:(NSString*)path {
+	PMImageMsgBody *body = [[PMImageMsgBody alloc] init];
+	body.url = path;
+	body.isLocalUrl = YES;
+	return body;
+}
+
+-(void)setIsLocalUrl:(BOOL)b {
+	_isLocalUrl = b;
+}
+
+-(BOOL)isLocalUrl {
+	return _isLocalUrl;
 }
 
 -(NSDictionary*) toDictionary {

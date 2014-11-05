@@ -5,4 +5,5 @@
 +(id)fromDictionary:(NSDictionary*)dict;
 
 -(NSString*) toDictionary;
+
 @end

@@ -4,6 +4,8 @@
 @interface PMImageMsgBody : PMMsgBody {
 }
 
++(id)localFile:(NSString*)path;
+
 @property (nonatomic, strong) NSString *scaledUrl;
 
 @property (nonatomic, strong) NSString *url;

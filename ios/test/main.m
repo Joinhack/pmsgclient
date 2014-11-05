@@ -20,8 +20,14 @@
 		PMMsg *msg = [[PMMsg alloc] init];
 		msg.to = 2;
 		msg.type = 1;
-		[msg addMsgBody:[PMTextMsgBody msgBodyWithContent:@"mmmmmm"]];
-		[chat.chatManager send:msg withError:&err];
+		PMImageMsgBody *body = [PMImageMsgBody localFile:@"CMakeCache.txt"];
+		[msg addMsgBody:body];
+PMImageMsgBody *body2 = [PMImageMsgBody localFile:@"CMakeCache.txt"];
+		[msg addMsgBody:body2];
+
+		[chat.chatManager asyncSend:msg withCompletion:^(PMMsg* msg,NSError* e){
+			NSLog(@"----%@-", e);
+		} onQueue:nil];
 		NSLog(@"error %@", err);
 	}
 }
@@ -50,9 +56,8 @@ int main() {
 		if(err) {
 			NSLog(@"error %@", err);
 			return -1;
-		} else {
-			NSLog(@"%@", v);
 		}
+		NSLog(@"loop....");
 		err = nil;
 		while([[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate distantFuture]]) {
 			
