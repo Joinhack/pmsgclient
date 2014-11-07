@@ -5,12 +5,12 @@
 @implementation PMLocationMsgBody:PMMsgBody {
 }
 
-+(id)fromDictionary:(NSDictionary*)dict {
++(instancetype)fromDictionary:(NSDictionary*)dict {
 	PMLocationMsgBody *body = [[PMLocationMsgBody alloc] init:dict[@"lat"] :dict[@"lng"] :dict[@"addr"]];
 	return body;
 }
 
--(id)init {
+-(instancetype)init {
 	self = [super init];
 	if(self) {
 		self.type = PMLocationMsgBodyType;
@@ -18,7 +18,7 @@
 	return self;
 }
 
--(id)init:(NSNumber*)lat :(NSNumber*)lng :(NSString*)addr {
+-(instancetype)init:(NSNumber*)lat :(NSNumber*)lng :(NSString*)addr {
 	self = [super init];
 	if(self) {
 		self.type = PMLocationMsgBodyType;

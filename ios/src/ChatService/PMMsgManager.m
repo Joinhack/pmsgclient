@@ -15,13 +15,13 @@
 
 @property (nonatomic, strong) dispatch_queue_t queue;
 
-+(id) init:(PMMsg*)msg :(void(^)(PMMsg*, NSError *))completion :(dispatch_queue_t)queue;
++(instancetype) init:(PMMsg*)msg :(void(^)(PMMsg*, NSError *))completion :(dispatch_queue_t)queue;
 
 @end
 
 @implementation SendingHandle
 
-+(id) init:(PMMsg*)msg :(void(^)(PMMsg*, NSError *))completion :(dispatch_queue_t)queue {
++(instancetype) init:(PMMsg*)msg :(void(^)(PMMsg*, NSError *))completion :(dispatch_queue_t)queue {
 	SendingHandle *handle = [[SendingHandle alloc] init];
 	handle.msg = msg;
 	handle.completion = completion;
@@ -40,7 +40,7 @@
 }
 
 
--(id) init {
+-(instancetype) init {
 	self = [super init];
 	if(self) {
 		_connectState = CLOSED;
@@ -109,11 +109,10 @@
 -(void) asyncSend:(PMMsg*)msg withCompletion:(void (^)(PMMsg*,NSError*))completion onQueue:(dispatch_queue_t)queue {
 
 	if(msg == nil && completion) {
-		__block PMMsg* message = msg;
 		dispatch_async(queue?queue:_queue, ^(){
 			NSError *error = [NSError errorWithDomain:@"PMMsg" code:-1 userInfo:@{@"detail":@"invaild msg"}];
 			completion(nil, error);
-			[PMChat.sharedInstance.chatManager invokeDelegate:@"didSendMsg:%@error:%@", message, error];
+			[PMChat.sharedInstance.chatManager invokeDelegate:@"didSendMsg:%@error:%@", msg, error];
 		});
 		return;
 	}
@@ -128,18 +127,17 @@
 	PMChatManager *chatManager = PMChat.sharedInstance.chatManager;
 	msg.id = [NSString stringWithFormat:@"%ld", chatManager.seq];
 	msg.from = PMChat.sharedInstance.whoami.longValue;
-	__block dispatch_queue_t q = queue?queue:_queue;
-	__block NSString *msgId = msg.id;
+	dispatch_queue_t q = queue?queue:_queue;
+	NSString *msgId = msg.id;
 	@synchronized(_sendingMsgs) {
 		_sendingMsgs[msg.id] = [SendingHandle init:msg :completion :q];
 	}
-	__block NSError *err;
+	NSError *err;
 	[chatManager saveMsg:msg error:&err];
 	if(err) {
-		__block PMMsg* message = msg;
 		dispatch_async(queue?queue:_queue, ^(){
 			completion(nil, err);
-			[PMChat.sharedInstance.chatManager invokeDelegate:@"didSendMsg:%@error:%@", message, err];
+			[PMChat.sharedInstance.chatManager invokeDelegate:@"didSendMsg:%@error:%@", msg, err];
 		});
 		return;
 	}
@@ -192,7 +190,7 @@
 		[_ws closeWithCode:-1 reason:[NSString stringWithFormat:@"%@", err]];
 		return;
 	}
-	__block SendingHandle *handle;
+	SendingHandle *handle;
 	@synchronized(_sendingMsgs) {
 		handle = _sendingMsgs[rs[@"id"]];
 		if(handle)
@@ -211,8 +209,7 @@
 
 	if([rs[@"type"] intValue] == 252) {
 		if(handle) {
-			[chat.chatManager invokeDelegate:@"didSendMsg:%@error:%@", handle.msg, nil];
-			__block NSString* nId = rs[@"nid"];
+			NSString* nId = rs[@"nid"];
 			dispatch_async(handle.queue, ^{
 				NSError *err;
 				PMChatManager *chatManager = chat.chatManager;
@@ -223,6 +220,7 @@
 				}
 				if(err) NSLog(@"%@", err);
 				handle.completion(handle.msg, nil);
+				[chat.chatManager invokeDelegate:@"didSendMsg:%@error:%@", handle.msg, nil];
 			});
 		}
 		return;

@@ -4,9 +4,9 @@
 @interface PMTextMsgBody : PMMsgBody {
 }
 
--(id)initWithContent:(NSString*)content;
+-(instancetype)initWithContent:(NSString*)content;
 
-+(id)msgBodyWithContent:(NSString*)content;
++(instancetype)msgBodyWithContent:(NSString*)content;
 
 @property (nonatomic, strong) NSString *content;
 

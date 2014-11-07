@@ -5,22 +5,22 @@
 @implementation PMTextMsgBody:PMMsgBody {
 }
 
-+(id)fromDictionary:(NSDictionary*)dict {
++(instancetype)fromDictionary:(NSDictionary*)dict {
 	PMTextMsgBody *body = [PMTextMsgBody msgBodyWithContent:dict[@"content"]];
 	return body;
 }
 
--(id)init {
+-(instancetype)init {
 	self = [super init];
 	self.type = PMTextMsgBodyType;
 	return self;
 }
 
-+(id)msgBodyWithContent:(NSString*)content {
++(instancetype)msgBodyWithContent:(NSString*)content {
 	return [[PMTextMsgBody alloc] initWithContent:content];
 }
 
--(id)initWithContent:(NSString*)content {
+-(instancetype)initWithContent:(NSString*)content {
 	self = [super init];
 	self.type = PMTextMsgBodyType;
 	self.content = content;

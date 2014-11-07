@@ -7,7 +7,7 @@
 }
 @property id<IChatManagerDelegate> delegate;
 @property dispatch_queue_t queue;
--(id)init:(id<IChatManagerDelegate>)d :(dispatch_queue_t)q;
+-(instancetype)init:(id<IChatManagerDelegate>)d :(dispatch_queue_t)q;
 @end
 
 @interface PMChatManager:NSObject <IChatManager> {

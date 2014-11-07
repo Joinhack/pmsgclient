@@ -3,7 +3,7 @@
 @interface PMMsg (Inner)
 -(NSString*)toJson:(NSError**)err;
 
-+(id)fromDictionary:(NSDictionary*)dict;
++(instancetype)fromDictionary:(NSDictionary*)dict;
 
 @property NSUInteger rowid;
 

@@ -2,7 +2,7 @@
 
 @interface PMMsgBody (Inner)
 
-+(id)fromDictionary:(NSDictionary*)dict;
++(instancetype)fromDictionary:(NSDictionary*)dict;
 
 -(NSString*) toDictionary;
 

@@ -15,7 +15,7 @@
 	rowid = rid;
 }
 
--(id)init {
+-(instancetype)init {
 	bodies = [[NSMutableArray alloc] init];
 	return self;
 }

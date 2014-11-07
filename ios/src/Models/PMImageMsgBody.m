@@ -6,7 +6,7 @@
 	BOOL _isLocalUrl;
 }
 
-+(id)fromDictionary:(NSDictionary*)dict {
++(instancetype)fromDictionary:(NSDictionary*)dict {
 	PMImageMsgBody *body = [[PMImageMsgBody alloc] init];
 	body.scaledUrl = dict[@"surl"];
 	body.url = dict[@"url"];
@@ -14,14 +14,14 @@
 	return body;
 }
 
--(id)init {
+-(instancetype)init {
 	self = [super init];
 	_isLocalUrl = NO;
 	self.type = PMImageMsgBodyType;
 	return self;
 }
 
-+(id)localFile:(NSString*)path {
++(instancetype)localFile:(NSString*)path {
 	PMImageMsgBody *body = [[PMImageMsgBody alloc] init];
 	body.url = path;
 	body.isLocalUrl = YES;

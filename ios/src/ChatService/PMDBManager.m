@@ -127,6 +127,18 @@
 
 static NSString *msgTableSchema = @"create table %@(id text, fromid int, toid int, state int, msg text);";
 
+-(void)begin {
+	[self execute:@"begin exclusive transaction" error:nil];
+}
+
+-(void)commit {
+	[self execute:@"commit transaction" error:nil];
+}
+
+-(void)rollback {
+	[self execute:@"rollback transaction" error:nil];
+}
+
 -(NSUInteger)saveMsg:(PMMsg*)msg error:(NSError**)error {
 	if(_database) {
 		NSError *err;
@@ -136,8 +148,6 @@ static NSString *msgTableSchema = @"create table %@(id text, fromid int, toid in
 			*error = err;
 			return -1;
 		}
-		[self execute:@"begin exclusive transaction" error:nil];
-
 		static NSString *sql = @"insert into %@ values(?, ?, ?, ?, ?);";
 		[self execute:[NSString stringWithFormat:sql, tabName] withCallback:^(sqlite3_stmt *stmt, NSError** e){
 			BCHECK(sqlite3_bind_text(stmt, 1, msg.id.UTF8String, -1, SQLITE_STATIC));
@@ -149,11 +159,9 @@ static NSString *msgTableSchema = @"create table %@(id text, fromid int, toid in
 			return sqlite3_step(stmt);
 		} error:&err];
 		if(err && error) {
-			[self execute:@"rollback transaction" error:nil];
 			*error = err;
 			return -1;
 		}
-		[self execute:@"commit transaction" error:nil];
 		msg.rowid = sqlite3_last_insert_rowid(_database);
 		return msg.rowid;
 	}
@@ -169,7 +177,6 @@ static NSString *msgTableSchema = @"create table %@(id text, fromid int, toid in
 			*error = err;
 			return -1;
 		}
-		[self execute:@"begin exclusive transaction" error:nil];
 		static NSString *sql = @"update %@ set state=?, id=? where id=?";
 		[self execute:[NSString stringWithFormat:sql, tabName] withCallback:^(sqlite3_stmt *stmt, NSError** e){
 			BCHECK(sqlite3_bind_int(stmt, 1, msg.state));
@@ -178,11 +185,9 @@ static NSString *msgTableSchema = @"create table %@(id text, fromid int, toid in
 			return sqlite3_step(stmt);
 		} error:&err];
 		if(err && error) {
-			[self execute:@"rollback transaction" error:nil];
 			*error = err;
 			return -1;
 		}
-		[self execute:@"commit transaction" error:nil];
 		return 1;
 	}
 	return 0;

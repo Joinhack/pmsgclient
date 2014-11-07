@@ -17,7 +17,7 @@
 	NSError *err;
 	PMChat *chat = [PMChat sharedInstance];
 	if(state == 3 && old == 2) {
-		for(int i = 0; i < 1; i++) {
+		for(int i = 0; i < 20; i++) {
 			PMMsg *msg = [[PMMsg alloc] init];
 			msg.to = 2;
 			msg.type = 1;

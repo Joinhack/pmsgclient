@@ -13,7 +13,7 @@
 @implementation DelegatePair {
 }
 
--(id)init:(id<IChatManagerDelegate>)d :(dispatch_queue_t)q {
+-(instancetype)init:(id<IChatManagerDelegate>)d :(dispatch_queue_t)q {
 	self = [super init];
 	self.delegate = d;
 	self.queue = q;
@@ -33,7 +33,7 @@
 	NSInteger _seq;
 }
 
--(id) init {
+-(instancetype) init {
 	self = [super init];
 	if(self) {
 		_requestChains = [[NSMutableDictionary alloc]init];
@@ -200,23 +200,24 @@
 -(void) processImageBody:(PMImageMsgBody*)imgBody withCompletion:(void (^)(PMMsg*,NSError*))completion withProgress:(void(^)(NSUInteger, NSUInteger, NSUInteger))progress onQueue:(dispatch_queue_t)queue chainId:(NSNumber*)chainId {
 
 	if(imgBody.isLocalUrl) {
-		NSMutableArray *callChain = [self getChain:chainId];
-		[callChain addObject:^{
+		NSMutableArray *chain = [self getChain:chainId];
+		[chain addObject:^{
 			
 			[self.fileManager uploadImage:imgBody.url withProgress:^(NSUInteger i,long long n,long long t){
 			}
 			completion:^(NSDictionary* d, NSError* e){
 				if(e) {
-					[self removeReqChain:chainId];
+					[self removeChain:chainId];
 					completion(nil, e);
 				}
+				NSLog(@"inner %p %@", imgBody.msg, chainId);
 				imgBody.url = d[@"url"];
 				imgBody.isLocalUrl = NO;
 				imgBody.scaledUrl = @"test";
-				NSMutableArray *callChain = [self getChain:chainId];
-				if(callChain && callChain.count > 0) {
-					void(^call)() = callChain[0];
-					[callChain removeObjectAtIndex:0];
+				NSMutableArray *chain = [self getChain:chainId];
+				if(chain && chain.count > 0) {
+					void(^call)() = chain[0];
+					[chain removeObjectAtIndex:0];
 					call();
 				}
 			} onQueue:queue];
@@ -224,9 +225,15 @@
 		}
 }
 
--(void) removeReqChain:(NSNumber*)key {
+-(void) removeChain:(NSNumber*)key {
 	@synchronized(self) {
 		[_requestChains removeObjectForKey:key];
+	}
+}
+
+-(void) addChain:(NSNumber*)key chain:(NSArray*)chain {
+	@synchronized(self) {
+		_requestChains[key] = chain;
 	}
 }
 
@@ -236,34 +243,39 @@
 	}
 }
 
+-(NSNumber*) nextChainId {
+	@synchronized(self) {
+		++_reqChainSeq;
+		if(_reqChainSeq <= 0)
+			_reqChainSeq = 1;
+		return [NSNumber numberWithLong:_reqChainSeq];
+	}
+}
+
 -(void) asyncSend:(PMMsg*)msg withCompletion:(void (^)(PMMsg*,NSError*))completion withProgress:(void(^)(NSUInteger, NSUInteger, NSUInteger))progress onQueue:(dispatch_queue_t)queue {
 	if(queue == nil) queue = PMChat.sharedInstance.defaultQueue;
-	NSMutableArray *callChain = [[NSMutableArray alloc] init];
-	long _callId;
-	NSNumber *callId;
-	@synchronized(self) {
-		_callId = ++_reqChainSeq;
-		callId = [NSNumber numberWithLong:_callId];
-		_requestChains[callId] = callChain;
-	}
-	
+	NSMutableArray *chain = [[NSMutableArray alloc] init];
+	NSNumber *chainId = self.nextChainId;
+		
+	[self addChain:chainId chain:chain];
+
 	if(msg.bodies) {
 		for(int i = 0; i < msg.bodies.count; i++) {
 			id<PMMsgBody> body = msg.bodies[i];
 			if(body.type == PMImageMsgBodyType) {
 				PMImageMsgBody *imgBody = body;
-				[self processImageBody:imgBody withCompletion:completion withProgress:progress onQueue:queue chainId:callId];
+				[self processImageBody:imgBody withCompletion:completion withProgress:progress onQueue:queue chainId:chainId];
 			}
 		}
 	}
-	[callChain addObject:^{
-		[self removeReqChain:callId];
+	[chain addObject:^{
+		[self removeChain:chainId];
 		[self.msgManager asyncSend:msg withCompletion:completion onQueue:queue];
 	}];
 	
-	void(^call1)() = callChain[0];
-	[callChain removeObjectAtIndex:0];
-	call1();
+	void(^call)() = chain[0];
+	[chain removeObjectAtIndex:0];
+	call();
 }
 
 -(NSUInteger)saveMsg:(PMMsg*)msg error:(NSError**)err {
