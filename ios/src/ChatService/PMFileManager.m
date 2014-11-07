@@ -4,6 +4,16 @@
 
 
 @implementation PMFileManager{
+	NSOperationQueue *uploadQueue;
+}
+
+-(instancetype)init {
+	self = [super init];
+	if(self) {
+		uploadQueue = [[NSOperationQueue alloc] init];
+		uploadQueue.maxConcurrentOperationCount = 1;
+	}
+	return self;
 }
 
 -(void)uploadImage:(NSString*)file completion:(void(^)(NSDictionary*, NSError*))completion {
@@ -38,6 +48,7 @@
 	if(queue == nil) queue = PMChat.sharedInstance.defaultQueue;
 	manager.responseSerializer = [AFJSONResponseSerializer serializer];
 	manager.completionQueue = queue;
+	manager.operationQueue = uploadQueue;
 	AFHTTPRequestOperation *operation = [manager HTTPRequestOperationWithRequest:request success:success failure:failure];
 	if(progress) [operation setUploadProgressBlock:progress];
 	[operation start];

@@ -151,9 +151,9 @@
 			[_sendingMsgs removeObjectForKey:msgId];
 			PMMsg *msg = handle.msg;
 			if(msg != nil && completion) {
-					dispatch_async(q, ^(){
-						completion(nil, [NSError errorWithDomain:@"PMMsg" code:-1 userInfo:@{@"detail":@"send msg timeout."}]);
-					});
+				dispatch_async(q, ^(){
+					completion(nil, [NSError errorWithDomain:@"PMMsg" code:-1 userInfo:@{@"detail":@"send msg timeout."}]);
+				});
 			}
 
 		}
@@ -217,9 +217,9 @@
 				NSError *err;
 				PMChatManager *chatManager = chat.chatManager;
 				if(nId) {
-					handle.msg.id = nId;
 					handle.msg.state = 2;
 					[chatManager updateMsg:handle.msg withNewId:nId error:&err];
+					handle.msg.id = nId;
 				}
 				if(err) NSLog(@"%@", err);
 				handle.completion(handle.msg, nil);

@@ -193,30 +193,39 @@
 	[self asyncSend:msg withCompletion:completion withProgress:nil onQueue:queue];
 }
 
+-(BOOL) processImageBody:(PMImageMsgBody*)imgBody withCompletion:(void (^)(PMMsg*,NSError*))completion withProgress:(void(^)(NSUInteger, NSUInteger, NSUInteger))progress onQueue:(dispatch_queue_t)queue withSemaphore:(dispatch_semaphore_t)sema {
+	if(imgBody.isLocalUrl) {
+			__block NSError* err;
+			[self.fileManager uploadImage:imgBody.url withProgress:^(NSUInteger i,long long n,long long t){
+			}
+			completion:^(NSDictionary* d, NSError* e){
+				if(e) err = e;
+				dispatch_semaphore_signal(sema);
+				if(err) return;
+				imgBody.url = d[@"url"];
+				imgBody.isLocalUrl = NO;
+				imgBody.scaledUrl = @"test";
+			} onQueue:queue];
+			dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
+			if(err) {
+				if(completion) completion(nil, err);
+				return NO;
+			}
+		}
+		return YES;
+}
+
 -(void) asyncSend:(PMMsg*)msg withCompletion:(void (^)(PMMsg*,NSError*))completion withProgress:(void(^)(NSUInteger, NSUInteger, NSUInteger))progress onQueue:(dispatch_queue_t)queue {
 	if(queue == nil) queue = PMChat.sharedInstance.defaultQueue;
 	dispatch_async(queue, ^{
 		if(msg.bodies) {
 			dispatch_semaphore_t sema = dispatch_semaphore_create(0);
-			__block NSError *err;
 			for(int i = 0; i < msg.bodies.count; i++) {
 				id<PMMsgBody> body = msg.bodies[i];
 				if(body.type == PMImageMsgBodyType) {
 					PMImageMsgBody *imgBody = body;
-					if(imgBody.isLocalUrl) {
-						[self.fileManager uploadImage:imgBody.url withProgress:^(NSUInteger i,long long n,long long t){
-						} 
-						completion:^(NSDictionary* d, NSError* e){
-							if(e) err = e;
-							dispatch_semaphore_signal(sema);
-							NSLog(@"~~~!%@", d);
-						} onQueue:queue];
-						dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
-						if(err) {
-							completion(nil, err);
-							return;
-						}
-					}
+					if(![self processImageBody:imgBody withCompletion:completion withProgress:progress onQueue:queue withSemaphore:sema])
+						return;
 				}
 			}
 		}

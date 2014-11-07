@@ -14,10 +14,11 @@
 		return PMChat.sharedInstance.whoami.intValue;
 }
 
--(id)init:(NSString*)path {
+-(instancetype)init:(NSString*)path {
 	self = [super init];
 	if(self) {
 		_tabExists = [NSMutableSet setWithCapacity:5];
+		sqlite3_threadsafe();
 		if(sqlite3_open(path.UTF8String, &_database)) {
 			NSString *msg = [NSString stringWithFormat:@"%s", sqlite3_errmsg(_database)];
 			NSAssert(0, msg);
@@ -32,23 +33,24 @@
 -(NSInteger)execute:(NSString*)sql withCallback:(int(^)(sqlite3_stmt*, NSError**))cb error:(NSError**)e {
 	if(_database) {
 		NSLog(@"sql: %@", sql);
-		sqlite3_stmt *stmt = NULL;
-		int rs;
-		if((rs = sqlite3_prepare_v2(_database, sql.UTF8String, -1, &stmt, NULL)) == SQLITE_OK) {
+		@synchronized(self) {
+			sqlite3_stmt *stmt = NULL;
+			int rs;
+			if((rs = sqlite3_prepare_v2(_database, sql.UTF8String, -1, &stmt, NULL)) == SQLITE_OK) {
+				rs = cb(stmt, e);
+				if(e && *e) return -1;
+			}
 			NSString *errmsg;
-			rs = cb(stmt, e);
-			if(e && *e) return -1;
-		}
-		NSString *errmsg;
-		if(rs != SQLITE_DONE && rs != SQLITE_ROW) {
-			const char *err = sqlite3_errmsg(_database);
+			if(rs != SQLITE_DONE && rs != SQLITE_ROW) {
+				const char *err = sqlite3_errmsg(_database);
+				if(stmt != NULL) sqlite3_finalize(stmt);
+				errmsg = [NSString stringWithUTF8String:err];
+				if(e)
+					*e = [NSError errorWithDomain:@"PMDB" code:-1 userInfo:@{@"detail": errmsg}];
+				return -1;
+			}
 			if(stmt != NULL) sqlite3_finalize(stmt);
-			errmsg = [NSString stringWithUTF8String:err];
-			if(e)
-				*e = [NSError errorWithDomain:@"PMDB" code:-1 userInfo:@{@"detail": errmsg}];
-			return -1;
 		}
-		if(stmt != NULL) sqlite3_finalize(stmt);
 		return 1;
 	}
 	return 0;
@@ -134,7 +136,7 @@ static NSString *msgTableSchema = @"create table %@(id text, fromid int, toid in
 			*error = err;
 			return -1;
 		}
-		int stat = self.whoami == msg.from? 0: 2;
+		[self execute:@"begin exclusive transaction" error:nil];
 
 		static NSString *sql = @"insert into %@ values(?, ?, ?, ?, ?);";
 		[self execute:[NSString stringWithFormat:sql, tabName] withCallback:^(sqlite3_stmt *stmt, NSError** e){
@@ -147,9 +149,11 @@ static NSString *msgTableSchema = @"create table %@(id text, fromid int, toid in
 			return sqlite3_step(stmt);
 		} error:&err];
 		if(err && error) {
+			[self execute:@"rollback transaction" error:nil];
 			*error = err;
 			return -1;
 		}
+		[self execute:@"commit transaction" error:nil];
 		msg.rowid = sqlite3_last_insert_rowid(_database);
 		return msg.rowid;
 	}
@@ -165,17 +169,20 @@ static NSString *msgTableSchema = @"create table %@(id text, fromid int, toid in
 			*error = err;
 			return -1;
 		}
-		static NSString *sql = @"update %@ set state=?, id=? where rowid=?";
+		[self execute:@"begin exclusive transaction" error:nil];
+		static NSString *sql = @"update %@ set state=?, id=? where id=?";
 		[self execute:[NSString stringWithFormat:sql, tabName] withCallback:^(sqlite3_stmt *stmt, NSError** e){
 			BCHECK(sqlite3_bind_int(stmt, 1, msg.state));
 			BCHECK(sqlite3_bind_text(stmt, 2, nid.UTF8String, -1, SQLITE_STATIC));
-			BCHECK(sqlite3_bind_int(stmt, 3, msg.rowid));
+			BCHECK(sqlite3_bind_int(stmt, 3, msg.id));
 			return sqlite3_step(stmt);
 		} error:&err];
 		if(err && error) {
+			[self execute:@"rollback transaction" error:nil];
 			*error = err;
 			return -1;
 		}
+		[self execute:@"commit transaction" error:nil];
 		return 1;
 	}
 	return 0;

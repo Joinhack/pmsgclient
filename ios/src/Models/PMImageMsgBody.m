@@ -43,6 +43,8 @@
 	dict[@"surl"] = self.scaledUrl;
 	if(self.name)
 		dict[@"name"] = self.name;
+	else
+		dict[@"name"] = @"";
 	return dict;
 }
 

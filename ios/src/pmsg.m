@@ -34,8 +34,9 @@
 	@synchronized(self) {
 		if(oq) return oq;
 		oq = dispatch_queue_create("pmsg.default.queue", DISPATCH_QUEUE_CONCURRENT);
-		return oq;
 	}
+	printf("--%p\n", oq);
+	return oq;
 }
 
 -(void) setDefaultQueue:(dispatch_queue_t)q {

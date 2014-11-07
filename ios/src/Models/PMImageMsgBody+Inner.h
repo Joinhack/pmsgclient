@@ -8,5 +8,7 @@
 
 -(BOOL)isLocalUrl;
 
+-(void)setIsLocalUrl:(BOOL)b;
+
 -(NSDictionary*) toDictionary;
 @end

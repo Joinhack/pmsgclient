@@ -17,17 +17,19 @@
 	NSError *err;
 	PMChat *chat = [PMChat sharedInstance];
 	if(state == 3 && old == 2) {
-		PMMsg *msg = [[PMMsg alloc] init];
-		msg.to = 2;
-		msg.type = 1;
-		PMImageMsgBody *body = [PMImageMsgBody localFile:@"CMakeCache.txt"];
-		[msg addMsgBody:body];
-PMImageMsgBody *body2 = [PMImageMsgBody localFile:@"CMakeCache.txt"];
-		[msg addMsgBody:body2];
+		for(int i = 0; i < 1; i++) {
+			PMMsg *msg = [[PMMsg alloc] init];
+			msg.to = 2;
+			msg.type = 1;
+			PMImageMsgBody *body = [PMImageMsgBody localFile:@"/Volumes/joinhack/Downloads/a.cc"];
+			[msg addMsgBody:body];
+	PMImageMsgBody *body2 = [PMImageMsgBody localFile:@"/Volumes/joinhack/Downloads/a.cc"];
+			[msg addMsgBody:body2];
 
-		[chat.chatManager asyncSend:msg withCompletion:^(PMMsg* msg,NSError* e){
-			NSLog(@"----%@-", e);
-		} onQueue:nil];
+			[chat.chatManager asyncSend:msg withCompletion:^(PMMsg* msg,NSError* e){
+				NSLog(@"----%@-", e);
+			} onQueue:nil];
+		}
 		NSLog(@"error %@", err);
 	}
 }

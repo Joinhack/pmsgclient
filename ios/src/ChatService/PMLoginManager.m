@@ -39,7 +39,6 @@
 	
 	PMChat *chat = [PMChat sharedInstance];
 	NSString *loginUrl = [chat.restUrl stringByAppendingString:@"/user/login"];
-	NSURL *url = [[NSURL alloc] initWithString:loginUrl];
 	__block NSString* _password = passwd;
 
 	AFHTTPRequestOperationManager *manager = [AFHTTPRequestOperationManager manager];
