@@ -27,15 +27,19 @@
 	PMMsgManager* _msgManager;
 	PMFileManager* _fileManager;
 	PMDBManager* _dbManager;
+	NSMutableDictionary *_requestChains;
 	NSMutableArray *_delegates;
+	long _reqChainSeq;
 	NSInteger _seq;
 }
 
 -(id) init {
 	self = [super init];
 	if(self) {
+		_requestChains = [[NSMutableDictionary alloc]init];
 		_delegates = [[NSMutableArray alloc] init];
 		_seq = 0;
+		_reqChainSeq = 0;
 	}
 	return self;
 }
@@ -193,44 +197,73 @@
 	[self asyncSend:msg withCompletion:completion withProgress:nil onQueue:queue];
 }
 
--(BOOL) processImageBody:(PMImageMsgBody*)imgBody withCompletion:(void (^)(PMMsg*,NSError*))completion withProgress:(void(^)(NSUInteger, NSUInteger, NSUInteger))progress onQueue:(dispatch_queue_t)queue withSemaphore:(dispatch_semaphore_t)sema {
+-(void) processImageBody:(PMImageMsgBody*)imgBody withCompletion:(void (^)(PMMsg*,NSError*))completion withProgress:(void(^)(NSUInteger, NSUInteger, NSUInteger))progress onQueue:(dispatch_queue_t)queue chainId:(NSNumber*)chainId {
+
 	if(imgBody.isLocalUrl) {
-			__block NSError* err;
+		NSMutableArray *callChain = [self getChain:chainId];
+		[callChain addObject:^{
+			
 			[self.fileManager uploadImage:imgBody.url withProgress:^(NSUInteger i,long long n,long long t){
 			}
 			completion:^(NSDictionary* d, NSError* e){
-				if(e) err = e;
-				dispatch_semaphore_signal(sema);
-				if(err) return;
+				if(e) {
+					[self removeReqChain:chainId];
+					completion(nil, e);
+				}
 				imgBody.url = d[@"url"];
 				imgBody.isLocalUrl = NO;
 				imgBody.scaledUrl = @"test";
+				NSMutableArray *callChain = [self getChain:chainId];
+				if(callChain && callChain.count > 0) {
+					void(^call)() = callChain[0];
+					[callChain removeObjectAtIndex:0];
+					call();
+				}
 			} onQueue:queue];
-			dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
-			if(err) {
-				if(completion) completion(nil, err);
-				return NO;
-			}
+			}];
 		}
-		return YES;
+}
+
+-(void) removeReqChain:(NSNumber*)key {
+	@synchronized(self) {
+		[_requestChains removeObjectForKey:key];
+	}
+}
+
+-(NSMutableArray*) getChain:(NSNumber*)key {
+	@synchronized(self) {
+		return _requestChains[key];
+	}
 }
 
 -(void) asyncSend:(PMMsg*)msg withCompletion:(void (^)(PMMsg*,NSError*))completion withProgress:(void(^)(NSUInteger, NSUInteger, NSUInteger))progress onQueue:(dispatch_queue_t)queue {
 	if(queue == nil) queue = PMChat.sharedInstance.defaultQueue;
-	dispatch_async(queue, ^{
-		if(msg.bodies) {
-			dispatch_semaphore_t sema = dispatch_semaphore_create(0);
-			for(int i = 0; i < msg.bodies.count; i++) {
-				id<PMMsgBody> body = msg.bodies[i];
-				if(body.type == PMImageMsgBodyType) {
-					PMImageMsgBody *imgBody = body;
-					if(![self processImageBody:imgBody withCompletion:completion withProgress:progress onQueue:queue withSemaphore:sema])
-						return;
-				}
+	NSMutableArray *callChain = [[NSMutableArray alloc] init];
+	long _callId;
+	NSNumber *callId;
+	@synchronized(self) {
+		_callId = ++_reqChainSeq;
+		callId = [NSNumber numberWithLong:_callId];
+		_requestChains[callId] = callChain;
+	}
+	
+	if(msg.bodies) {
+		for(int i = 0; i < msg.bodies.count; i++) {
+			id<PMMsgBody> body = msg.bodies[i];
+			if(body.type == PMImageMsgBodyType) {
+				PMImageMsgBody *imgBody = body;
+				[self processImageBody:imgBody withCompletion:completion withProgress:progress onQueue:queue chainId:callId];
 			}
 		}
+	}
+	[callChain addObject:^{
+		[self removeReqChain:callId];
 		[self.msgManager asyncSend:msg withCompletion:completion onQueue:queue];
-	});
+	}];
+	
+	void(^call1)() = callChain[0];
+	[callChain removeObjectAtIndex:0];
+	call1();
 }
 
 -(NSUInteger)saveMsg:(PMMsg*)msg error:(NSError**)err {

@@ -174,7 +174,7 @@ static NSString *msgTableSchema = @"create table %@(id text, fromid int, toid in
 		[self execute:[NSString stringWithFormat:sql, tabName] withCallback:^(sqlite3_stmt *stmt, NSError** e){
 			BCHECK(sqlite3_bind_int(stmt, 1, msg.state));
 			BCHECK(sqlite3_bind_text(stmt, 2, nid.UTF8String, -1, SQLITE_STATIC));
-			BCHECK(sqlite3_bind_int(stmt, 3, msg.id));
+			BCHECK(sqlite3_bind_text(stmt, 3, msg.id.UTF8String, -1, SQLITE_STATIC));
 			return sqlite3_step(stmt);
 		} error:&err];
 		if(err && error) {
