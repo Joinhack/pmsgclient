@@ -29,7 +29,7 @@
 	PMDBManager* _dbManager;
 	NSMutableDictionary *_requestChains;
 	NSMutableArray *_delegates;
-	long _reqChainSeq;
+	long _chainId;
 	NSInteger _seq;
 }
 
@@ -39,7 +39,7 @@
 		_requestChains = [[NSMutableDictionary alloc]init];
 		_delegates = [[NSMutableArray alloc] init];
 		_seq = 0;
-		_reqChainSeq = 0;
+		_chainId = 0;
 	}
 	return self;
 }
@@ -197,29 +197,26 @@
 	[self asyncSend:msg withCompletion:completion withProgress:nil onQueue:queue];
 }
 
--(void) processImageBody:(PMImageMsgBody*)imgBody withCompletion:(void (^)(PMMsg*,NSError*))completion withProgress:(void(^)(NSUInteger, NSUInteger, NSUInteger))progress onQueue:(dispatch_queue_t)queue chainId:(NSNumber*)chainId {
+-(void) processImageBody:(PMImageMsgBody*)imgBody withCompletion:(void (^)(PMMsg*,NSError*))completion withProgress:(void(^)(id<PMMsgBody>, NSUInteger, NSUInteger))progress onQueue:(dispatch_queue_t)queue chainId:(NSNumber*)chainId {
 
 	if(imgBody.isLocalUrl) {
 		NSMutableArray *chain = [self getChain:chainId];
 		[chain addObject:^{
 			
 			[self.fileManager uploadImage:imgBody.url withProgress:^(NSUInteger i,long long n,long long t){
+				if(progress) {
+					progress(imgBody, n, t);
+				}
 			}
 			completion:^(NSDictionary* d, NSError* e){
 				if(e) {
 					[self removeChain:chainId];
 					completion(nil, e);
 				}
-				NSLog(@"inner %p %@", imgBody.msg, chainId);
 				imgBody.url = d[@"url"];
 				imgBody.isLocalUrl = NO;
 				imgBody.scaledUrl = @"test";
-				NSMutableArray *chain = [self getChain:chainId];
-				if(chain && chain.count > 0) {
-					void(^call)() = chain[0];
-					[chain removeObjectAtIndex:0];
-					call();
-				}
+				[self chainCall:chainId];
 			} onQueue:queue];
 			}];
 		}
@@ -245,14 +242,25 @@
 
 -(NSNumber*) nextChainId {
 	@synchronized(self) {
-		++_reqChainSeq;
-		if(_reqChainSeq <= 0)
-			_reqChainSeq = 1;
-		return [NSNumber numberWithLong:_reqChainSeq];
+		++_chainId;
+		if(_chainId <= 0)
+			_chainId = 1;
+		return [NSNumber numberWithLong:_chainId];
 	}
 }
 
--(void) asyncSend:(PMMsg*)msg withCompletion:(void (^)(PMMsg*,NSError*))completion withProgress:(void(^)(NSUInteger, NSUInteger, NSUInteger))progress onQueue:(dispatch_queue_t)queue {
+-(void) chainCall:(NSNumber*)chainId {
+	NSMutableArray *chain = [self getChain:chainId];
+	if(chain.count > 0) {
+		void(^call)() = chain[0];
+		[chain removeObjectAtIndex:0];
+		call();
+		if(chain.count == 0)
+			[self removeChain:chainId];
+	}
+}
+
+-(void) asyncSend:(PMMsg*)msg withCompletion:(void (^)(PMMsg*,NSError*))completion withProgress:(void(^)(id<PMMsgBody>, NSUInteger, NSUInteger))progress onQueue:(dispatch_queue_t)queue {
 	if(queue == nil) queue = PMChat.sharedInstance.defaultQueue;
 	NSMutableArray *chain = [[NSMutableArray alloc] init];
 	NSNumber *chainId = self.nextChainId;
@@ -269,13 +277,10 @@
 		}
 	}
 	[chain addObject:^{
-		[self removeChain:chainId];
 		[self.msgManager asyncSend:msg withCompletion:completion onQueue:queue];
 	}];
-	
-	void(^call)() = chain[0];
-	[chain removeObjectAtIndex:0];
-	call();
+
+	[self chainCall:chainId];
 }
 
 -(NSUInteger)saveMsg:(PMMsg*)msg error:(NSError**)err {

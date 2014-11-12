@@ -17,7 +17,7 @@
 	NSError *err;
 	PMChat *chat = [PMChat sharedInstance];
 	if(state == 3 && old == 2) {
-		for(int i = 0; i < 20; i++) {
+		for(int i = 0; i < 1; i++) {
 			PMMsg *msg = [[PMMsg alloc] init];
 			msg.to = 2;
 			msg.type = 1;
@@ -27,7 +27,9 @@
 			[msg addMsgBody:body2];
 
 			[chat.chatManager asyncSend:msg withCompletion:^(PMMsg* msg,NSError* e){
-				NSLog(@"----%@-", e);
+				NSLog(@"----finish ed %@-", e);
+			} withProgress:^(id<PMMsgBody> body, NSUInteger n, NSUInteger t){
+				NSLog(@"----%lu %lu-", n, t);	
 			} onQueue:nil];
 		}
 		NSLog(@"error %@", err);

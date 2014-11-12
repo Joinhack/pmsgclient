@@ -23,6 +23,8 @@
 
 -(void) asyncLogin:(NSString*)user :(NSString*)passwd withCompletion:(void (^)(NSDictionary*,NSError*))completion onQueue:(dispatch_queue_t)queue;
 
+-(void) asyncSend:(PMMsg*)msg withCompletion:(void (^)(PMMsg*,NSError*))completion withProgress:(void(^)(id<PMMsgBody>, NSUInteger, NSUInteger))progress onQueue:(dispatch_queue_t)queue;
+
 -(void)invokeDelegate:(NSString*)method, ...;
 
 -(void)addDelegate:(id<IChatManagerDelegate>)delegate :(dispatch_queue_t)queue;
