@@ -11,11 +11,11 @@
 	return [self login:user :passwd withError:nil];
 }
 
--(NSDictionary*) login:(NSString*)user :(NSString*)passwd withError:(NSError**)error {
+-(NSDictionary*) login:(NSString*)user :(NSString*)passwd withError:(PMError**)error {
 	dispatch_semaphore_t sema = dispatch_semaphore_create(0);
 	__block NSDictionary *dict;
-	__block NSError *er;
-	[self asyncLogin:user :passwd withCompletion:^(NSDictionary *d,NSError *e){
+	__block PMError *er;
+	[self asyncLogin:user :passwd withCompletion:^(NSDictionary *d,PMError *e){
 		if(e) {
 			er = e;
 		} else
@@ -31,11 +31,11 @@
 	[self asyncLogin:user :passwd withCompletion:nil];
 }
 
--(void) asyncLogin:(NSString*)user :(NSString*)passwd withCompletion:(void (^)(NSDictionary*,NSError*))completion {
+-(void) asyncLogin:(NSString*)user :(NSString*)passwd withCompletion:(void (^)(NSDictionary*,PMError*))completion {
 	[self asyncLogin:user :passwd withCompletion:completion onQueue:PMChat.sharedInstance.defaultQueue];
 }
 
--(void) asyncLogin:(NSString*)user :(NSString*)passwd withCompletion:(void (^)(NSDictionary*,NSError*)) completion onQueue:(dispatch_queue_t)queue {
+-(void) asyncLogin:(NSString*)user :(NSString*)passwd withCompletion:(void (^)(NSDictionary*,PMError*)) completion onQueue:(dispatch_queue_t)queue {
 	
 	PMChat *chat = [PMChat sharedInstance];
 	NSString *loginUrl = [chat.restUrl stringByAppendingString:@"/user/login"];
@@ -46,14 +46,17 @@
 	manager.completionQueue = queue;
 	manager.responseSerializer = [AFJSONResponseSerializer serializer];
 	AFHTTPRequestOperation *post = [manager POST:loginUrl parameters:@{@"name": user, @"password":passwd} success:^(AFHTTPRequestOperation *operation, id responseObject) {
-		NSError *error;
+		PMError *error;
     NSDictionary *dict = responseObject;
     if(!dict[@"code"]) {
-			error = [NSError errorWithDomain:@"Login" code:-1 userInfo:@{@"detail":@"error format"}];
+			error = [PMError errorWithCode:PMLoginFail withDescription:@"error format"];
 			goto FINISH;
 		}
 		if(![dict[@"code"] isEqual:[NSNumber numberWithInt:0]]) {
-			error = [NSError errorWithDomain:@"Login" code:-1 userInfo:@{@"detail":@"error code"}];
+			NSString *desc = [NSString stringWithFormat:@"error return value."];
+			if(dict[@"msg"])
+				desc = [NSString stringWithFormat:@"%@", dict[@"msg"]];
+			error = [PMError errorWithCode:PMLoginFail withDescription:desc];
 			goto FINISH;
 		}
 		chat.whoami = dict[@"id"];
@@ -64,7 +67,7 @@ FINISH:
 		[[chat chatManager] invokeDelegate:@"didLogin:%@:%@", dict, error];
 		if(completion) completion(dict, error);
 	} failure:^(AFHTTPRequestOperation *o, NSError *e){
-		if(completion) completion(nil, e);
+		if(completion) completion(nil, [PMError errorWithCode:PMLoginFail withDescription:e.description]);
 	}];
 }
 

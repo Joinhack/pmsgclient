@@ -15,15 +15,15 @@
 
 -(NSDictionary*) login:(NSString*)user :(NSString*)passwd;
 
--(NSDictionary*) login:(NSString*)user :(NSString*)passwd withError:(NSError**) err;
+-(NSDictionary*) login:(NSString*)user :(NSString*)passwd withError:(PMError**) err;
 
 -(void) asyncLogin:(NSString*)user :(NSString*)passwd;
 
--(void) asyncLogin:(NSString*)user :(NSString*)passwd withCompletion:(void (^)(NSDictionary*,NSError*)) completion;
+-(void) asyncLogin:(NSString*)user :(NSString*)passwd withCompletion:(void (^)(NSDictionary*,PMError*)) completion;
 
--(void) asyncLogin:(NSString*)user :(NSString*)passwd withCompletion:(void (^)(NSDictionary*,NSError*))completion onQueue:(dispatch_queue_t)queue;
+-(void) asyncLogin:(NSString*)user :(NSString*)passwd withCompletion:(void (^)(NSDictionary*,PMError*))completion onQueue:(dispatch_queue_t)queue;
 
--(void) asyncSend:(PMMsg*)msg withCompletion:(void (^)(PMMsg*,NSError*))completion withProgress:(void(^)(id<PMMsgBody>, NSUInteger, NSUInteger))progress onQueue:(dispatch_queue_t)queue;
+-(void) asyncSend:(PMMsg*)msg withCompletion:(void (^)(PMMsg*,PMError*))completion withProgress:(void(^)(id<PMMsgBody>, NSUInteger, NSUInteger))progress onQueue:(dispatch_queue_t)queue;
 
 -(void)invokeDelegate:(NSString*)method, ...;
 
@@ -31,9 +31,9 @@
 
 -(void)removeDelegate:(id<IChatManagerDelegate>)delegate;
 
--(NSUInteger)saveMsg:(PMMsg*)msg error:(NSError**)err;
+-(NSUInteger)saveMsg:(PMMsg*)msg error:(PMError**)err;
 
--(NSInteger)updateMsg:(PMMsg*)msg withNewId:(NSString*)nid error:(NSError**)err;
+-(NSInteger)updateMsg:(PMMsg*)msg withNewId:(NSString*)nid error:(PMError**)err;
 
 -(NSInteger)seq;
 

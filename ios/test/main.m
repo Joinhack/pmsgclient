@@ -8,8 +8,8 @@
 
 @implementation TestDelegate {
 }
--(void)didLogin:(NSDictionary*)dict :(NSError*)err {
-	NSLog(@"--%@ %@", dict, err);
+-(void)didLogin:(NSDictionary*)dict :(PMError*)err {
+	NSLog(@"----%@ %@", dict, err);
 }
 
 -(void) didConnectStateChange:(PMConnectStat)state from:(PMConnectStat)old {
@@ -26,7 +26,7 @@
 	PMImageMsgBody *body2 = [PMImageMsgBody localFile:@"/Volumes/joinhack/Downloads/a.cc"];
 			[msg addMsgBody:body2];
 
-			[chat.chatManager asyncSend:msg withCompletion:^(PMMsg* msg,NSError* e){
+			[chat.chatManager asyncSend:msg withCompletion:^(PMMsg* msg,PMError* e){
 				NSLog(@"----finish ed %@-", e);
 			} withProgress:^(id<PMMsgBody> body, NSUInteger n, NSUInteger t){
 				NSLog(@"----%lu %lu-", n, t);	
@@ -52,7 +52,7 @@ int main() {
 		chat.restUrl = @"http://localhost:8000";
 		chat.wsUrl = @"http://localhost:8000";
 		chat.dbPath = @"/Volumes/joinhack/Downloads/test.db";
-		NSError*  err = nil;
+		PMError*  err = nil;
 		id<IChatManager> cm = [chat chatManager];
 		TestDelegate *delegate = [[TestDelegate alloc] init];
 		[cm addDelegate:delegate :nil];

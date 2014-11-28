@@ -2,7 +2,7 @@
 #import <Models/PMImageMsgBody.h>
 
 
-@implementation PMImageMsgBody:PMMsgBody {
+@implementation PMImageMsgBody {
 	BOOL _isLocalUrl;
 }
 

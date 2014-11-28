@@ -1,6 +1,7 @@
+#import <pmsg.h>
 #import "PMDBManager.h"
 #import <sqlite3.h>
-#import <pmsg.h>
+
 #import "../Models/PMMsg+Inner.h"
 
 #define BCHECK(s) if(s != SQLITE_OK) return SQLITE_ERROR
@@ -30,7 +31,7 @@
 }
 
 
--(NSInteger)execute:(NSString*)sql withCallback:(int(^)(sqlite3_stmt*, NSError**))cb error:(NSError**)e {
+-(NSInteger)execute:(NSString*)sql withCallback:(int(^)(sqlite3_stmt*, PMError**))cb error:(PMError**)e {
 	if(_database) {
 		NSLog(@"sql: %@", sql);
 		@synchronized(self) {
@@ -46,7 +47,7 @@
 				if(stmt != NULL) sqlite3_finalize(stmt);
 				errmsg = [NSString stringWithUTF8String:err];
 				if(e)
-					*e = [NSError errorWithDomain:@"PMDB" code:-1 userInfo:@{@"detail": errmsg}];
+					*e = [PMError errorWithCode:PMDBOperatorError withDescription:errmsg];
 				return -1;
 			}
 			if(stmt != NULL) sqlite3_finalize(stmt);
@@ -56,14 +57,14 @@
 	return 0;
 }
 
--(NSInteger)execute:(NSString*)sql error:(NSError**)e {
-	return [self execute:sql withCallback:^(sqlite3_stmt *stmt, NSError** e){ return sqlite3_step(stmt);} error:e];
+-(NSInteger)execute:(NSString*)sql error:(PMError**)e {
+	return [self execute:sql withCallback:^(sqlite3_stmt *stmt, PMError** e){ return sqlite3_step(stmt);} error:e];
 }
--(bool)isExists:(NSString*)name error:(NSError**)e {
+-(bool)isExists:(NSString*)name error:(PMError**)e {
 	if(_database) {
 		NSString *sql = [NSString stringWithFormat:@"SELECT name FROM sqlite_master WHERE type='table' AND name='%@';", name];
 		__block bool exists = false;
-		[self execute:sql withCallback:^(sqlite3_stmt *stmt, NSError **e){
+		[self execute:sql withCallback:^(sqlite3_stmt *stmt, PMError **e){
 			int rs;
 			do {
 				rs = sqlite3_step(stmt);
@@ -84,8 +85,8 @@
 	return tabName;
 }
 
--(NSError*) tableCheck:(NSString*)tabName :(NSString*(^)())tableSchema {
-		NSError *err;
+-(PMError*) tableCheck:(NSString*)tabName :(NSString*(^)())tableSchema {
+		PMError *err;
 		if(![_tabExists containsObject:tabName]) {
 			bool flags = [self isExists:tabName error:&err];
 			if(err) return err;
@@ -102,11 +103,11 @@
 
 -(NSInteger)seq:(NSInteger)inMem {
 	if(_database) {
-		NSError *err;
+		PMError *err;
 		err = [self tableCheck:@"seq" :^{return @"create table seq(seq Integer default 1, name text);";}];
 		if(err) return ++inMem;
 		__block NSInteger mval = inMem;
-		[self execute:@"select seq from seq where name='seq';" withCallback:^(sqlite3_stmt* stmt, NSError** e) {
+		[self execute:@"select seq from seq where name='seq';" withCallback:^(sqlite3_stmt* stmt, PMError** e) {
 			if(sqlite3_step(stmt) == SQLITE_ROW) {
 				NSInteger val = sqlite3_column_int(stmt, 0);
 				if(val > inMem)
@@ -139,9 +140,9 @@ static NSString *msgTableSchema = @"create table %@(id text, fromid int, toid in
 	[self execute:@"rollback transaction" error:nil];
 }
 
--(NSUInteger)saveMsg:(PMMsg*)msg error:(NSError**)error {
+-(NSUInteger)saveMsg:(PMMsg*)msg error:(PMError**)error {
 	if(_database) {
-		NSError *err;
+		PMError *err;
 		NSString *tabName = [self tabName:msg];
 		err = [self tableCheck:tabName :^{return [NSString stringWithFormat:msgTableSchema, tabName];}];
 		if(err && error) {
@@ -149,7 +150,7 @@ static NSString *msgTableSchema = @"create table %@(id text, fromid int, toid in
 			return -1;
 		}
 		static NSString *sql = @"insert into %@ values(?, ?, ?, ?, ?);";
-		[self execute:[NSString stringWithFormat:sql, tabName] withCallback:^(sqlite3_stmt *stmt, NSError** e){
+		[self execute:[NSString stringWithFormat:sql, tabName] withCallback:^(sqlite3_stmt *stmt, PMError** e){
 			BCHECK(sqlite3_bind_text(stmt, 1, msg.id.UTF8String, -1, SQLITE_STATIC));
 			BCHECK(sqlite3_bind_int(stmt, 2, msg.from));
 			BCHECK(sqlite3_bind_int(stmt, 3, msg.to));
@@ -168,9 +169,9 @@ static NSString *msgTableSchema = @"create table %@(id text, fromid int, toid in
 	return 0;
 }
 
--(NSInteger)updateMsg:(PMMsg*)msg withNewId:(NSString*)nid  error:(NSError**)error {
+-(NSInteger)updateMsg:(PMMsg*)msg withNewId:(NSString*)nid  error:(PMError**)error {
 	if(_database) {
-		NSError *err;
+		PMError *err;
 		NSString *tabName = [self tabName:msg];
 		err = [self tableCheck:tabName :^{return [NSString stringWithFormat:msgTableSchema, tabName];}];
 		if(err && error) {
@@ -178,7 +179,7 @@ static NSString *msgTableSchema = @"create table %@(id text, fromid int, toid in
 			return -1;
 		}
 		static NSString *sql = @"update %@ set state=?, id=? where id=?";
-		[self execute:[NSString stringWithFormat:sql, tabName] withCallback:^(sqlite3_stmt *stmt, NSError** e){
+		[self execute:[NSString stringWithFormat:sql, tabName] withCallback:^(sqlite3_stmt *stmt, PMError** e){
 			BCHECK(sqlite3_bind_int(stmt, 1, msg.state));
 			BCHECK(sqlite3_bind_text(stmt, 2, nid.UTF8String, -1, SQLITE_STATIC));
 			BCHECK(sqlite3_bind_text(stmt, 3, msg.id.UTF8String, -1, SQLITE_STATIC));

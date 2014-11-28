@@ -1,6 +1,7 @@
 #import <Models/PMMsg.h>
-#import <ChatService/IMsgManager.h>
+
 #import <pmsg.h>
+#import <ChatService/IMsgManager.h>
 
 #import "../websocket/SRWebSocket.h"
 #import "PMMsgManager.h"
@@ -11,17 +12,17 @@
 
 @property (nonatomic, strong) PMMsg *msg;
 
-@property (nonatomic, strong) void(^completion)(PMMsg*, NSError *);
+@property (nonatomic, strong) void(^completion)(PMMsg*, PMError *);
 
 @property (nonatomic, strong) dispatch_queue_t queue;
 
-+(instancetype) init:(PMMsg*)msg :(void(^)(PMMsg*, NSError *))completion :(dispatch_queue_t)queue;
++(instancetype) init:(PMMsg*)msg :(void(^)(PMMsg*, PMError *))completion :(dispatch_queue_t)queue;
 
 @end
 
 @implementation SendingHandle
 
-+(instancetype) init:(PMMsg*)msg :(void(^)(PMMsg*, NSError *))completion :(dispatch_queue_t)queue {
++(instancetype) init:(PMMsg*)msg :(void(^)(PMMsg*, PMError *))completion :(dispatch_queue_t)queue {
 	SendingHandle *handle = [[SendingHandle alloc] init];
 	handle.msg = msg;
 	handle.completion = completion;
@@ -83,11 +84,11 @@
 	return [self send:msg withError:nil];
 }
 
--(PMMsg*) send:(PMMsg*)msg withError:(NSError**)err {
-	__block NSError *error;
+-(PMMsg*) send:(PMMsg*)msg withError:(PMError**)err {
+	__block PMError *error;
 	__block PMMsg *m;
 	dispatch_semaphore_t sema = dispatch_semaphore_create(0);
-	[self asyncSend:msg withCompletion:^(PMMsg* rs, NSError* e){
+	[self asyncSend:msg withCompletion:^(PMMsg* rs, PMError* e){
 		if(e) error = e; else m = rs;
 		dispatch_semaphore_signal(sema);
 	}];
@@ -101,16 +102,16 @@
 	[self asyncSend:msg withCompletion:nil];
 }
 
--(void) asyncSend:(PMMsg*)msg withCompletion:(void (^)(PMMsg*,NSError*))completion{
+-(void) asyncSend:(PMMsg*)msg withCompletion:(void (^)(PMMsg*,PMError*))completion{
 	[self asyncSend:msg withCompletion:completion onQueue:_queue];
 }
 
 
--(void) asyncSend:(PMMsg*)msg withCompletion:(void (^)(PMMsg*,NSError*))completion onQueue:(dispatch_queue_t)queue {
+-(void) asyncSend:(PMMsg*)msg withCompletion:(void (^)(PMMsg*,PMError*))completion onQueue:(dispatch_queue_t)queue {
 
 	if(msg == nil && completion) {
 		dispatch_async(queue?queue:_queue, ^(){
-			NSError *error = [NSError errorWithDomain:@"PMMsg" code:-1 userInfo:@{@"detail":@"invaild msg"}];
+			PMError *error = [PMError errorWithCode:PMInvalidParameter withDescription:@"invaild msg"];
 			completion(nil, error);
 			[PMChat.sharedInstance.chatManager invokeDelegate:@"didSendMsg:%@error:%@", msg, error];
 		});
@@ -119,7 +120,7 @@
 	if (_connectState != CONNECTED) {
 		dispatch_queue_t q = queue?queue:_queue;
 		dispatch_async(q, ^(){
-			completion(nil, [NSError errorWithDomain:@"PMMsg" code:-1 userInfo:@{@"detail":@"connection is closed"}]);
+			completion(nil, [PMError errorWithCode:PMConnectionClosed withDescription:@"connection is closed"]);
 		});
 		return;
 	}
@@ -132,7 +133,7 @@
 	@synchronized(_sendingMsgs) {
 		_sendingMsgs[msg.id] = [SendingHandle init:msg :completion :q];
 	}
-	NSError *err;
+	PMError *err;
 	[chatManager saveMsg:msg error:&err];
 	if(err) {
 		dispatch_async(queue?queue:_queue, ^(){
@@ -150,7 +151,7 @@
 			PMMsg *msg = handle.msg;
 			if(msg != nil && completion) {
 				dispatch_async(q, ^(){
-					completion(nil, [NSError errorWithDomain:@"PMMsg" code:-1 userInfo:@{@"detail":@"send msg timeout."}]);
+					completion(nil, [PMError errorWithCode:PMTimeout withDescription:@"send msg timeout."]);
 				});
 			}
 
@@ -211,7 +212,7 @@
 		if(handle) {
 			NSString* nId = rs[@"nid"];
 			dispatch_async(handle.queue, ^{
-				NSError *err;
+				PMError *err;
 				PMChatManager *chatManager = chat.chatManager;
 				if(nId) {
 					handle.msg.state = 2;

@@ -3,9 +3,10 @@
 #import <Models/PMMsgBody.h>
 #import <Models/PMTextMsgBody.h>
 #import <Models/PMImageMsgBody.h>
+#import <Models/PMGroup.h>
+#import <Models/PMError.h>
 #import <ChatService/IChatManager.h>
 
-#define NullValue(v) v?v:[NSNull null]
 
 @interface PMChat:NSObject {
 }

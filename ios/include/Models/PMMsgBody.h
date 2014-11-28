@@ -3,7 +3,7 @@
 
 @class PMMsg;
 
-typedef enum : NSInteger {
+typedef enum {
 	PMTextMsgBodyType = 1,
 	PMImageMsgBodyType,
 	PMLocationMsgBodyType,

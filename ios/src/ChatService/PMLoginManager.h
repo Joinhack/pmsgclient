@@ -5,12 +5,12 @@
 
 -(NSDictionary*) login:(NSString*)user :(NSString*)passwd;
 
--(NSDictionary*) login:(NSString*)user :(NSString*)passwd withError:(NSError**) err;
+-(NSDictionary*) login:(NSString*)user :(NSString*)passwd withError:(PMError**) err;
 
 -(void) asyncLogin:(NSString*)user :(NSString*)passwd;
 
--(void) asyncLogin:(NSString*)user :(NSString*)passwd withCompletion:(void (^)(NSDictionary*,NSError*)) completion;
+-(void) asyncLogin:(NSString*)user :(NSString*)passwd withCompletion:(void (^)(NSDictionary*,PMError*)) completion;
 
--(void) asyncLogin:(NSString*)user :(NSString*)passwd withCompletion:(void (^)(NSDictionary*,NSError*))completion onQueue:(dispatch_queue_t)queue;
+-(void) asyncLogin:(NSString*)user :(NSString*)passwd withCompletion:(void (^)(NSDictionary*,PMError*))completion onQueue:(dispatch_queue_t)queue;
 
 @end

@@ -1,4 +1,4 @@
-typedef enum  NSInteger {
+typedef enum {
 	CLOSED = 1,
 	CONNECTING = 2,
 	CONNECTED = 3,
@@ -10,8 +10,7 @@ typedef enum  NSInteger {
 
 -(void) didReceiveMsg:(PMMsg*)msg;
 
-- (void)didSendMsg:(PMMsg *)msg
-                error:(NSError *)error;
+- (void)didSendMsg:(PMMsg *)msg error:(PMError *)error;
 
 @end
 
@@ -22,13 +21,13 @@ typedef enum  NSInteger {
 
 -(PMMsg*) send:(PMMsg*)msg;
 
--(PMMsg*) send:(PMMsg*)msg withError:(NSError**)err;
+-(PMMsg*) send:(PMMsg*)msg withError:(PMError**)err;
 
 -(void) asyncSend:(PMMsg*)msg;
 
--(void) asyncSend:(PMMsg*)msg withCompletion:(void (^)(PMMsg*,NSError*)) completion;
+-(void) asyncSend:(PMMsg*)msg withCompletion:(void (^)(PMMsg*,PMError*)) completion;
 
--(void) asyncSend:(PMMsg*)msg withCompletion:(void (^)(PMMsg*,NSError*)) completion onQueue:(dispatch_queue_t)queue;
+-(void) asyncSend:(PMMsg*)msg withCompletion:(void (^)(PMMsg*,PMError*)) completion onQueue:(dispatch_queue_t)queue;
 
 -(void) reconnect;
 @end

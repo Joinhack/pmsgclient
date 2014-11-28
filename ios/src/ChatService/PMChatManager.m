@@ -157,7 +157,7 @@
 	return [self.loginManager login:user :passwd];
 }
 
--(NSDictionary*) login:(NSString*)user :(NSString*)passwd withError:(NSError**) err {
+-(NSDictionary*) login:(NSString*)user :(NSString*)passwd withError:(PMError**) err {
 	return [self.loginManager login:user :passwd withError:err];
 }
 
@@ -165,11 +165,11 @@
 	[self.loginManager asyncLogin:user :passwd];
 }
 
--(void) asyncLogin:(NSString*)user :(NSString*)passwd withCompletion:(void (^)(NSDictionary*,NSError*)) completion {
+-(void) asyncLogin:(NSString*)user :(NSString*)passwd withCompletion:(void (^)(NSDictionary*,PMError*)) completion {
 	[self.loginManager asyncLogin:user :passwd withCompletion:completion];
 }
 
--(void) asyncLogin:(NSString*)user :(NSString*)passwd withCompletion:(void (^)(NSDictionary*,NSError*))completion onQueue:(dispatch_queue_t)q {
+-(void) asyncLogin:(NSString*)user :(NSString*)passwd withCompletion:(void (^)(NSDictionary*,PMError*))completion onQueue:(dispatch_queue_t)q {
 	[self.loginManager asyncLogin:user :passwd withCompletion:completion onQueue:q];
 }
 
@@ -181,7 +181,7 @@
 	return [self.msgManager send:msg];
 }
 
--(PMMsg*) send:(PMMsg*)msg withError:(NSError**)err {
+-(PMMsg*) send:(PMMsg*)msg withError:(PMError**)err {
 	return [self.msgManager send:msg withError:err];
 }
 
@@ -189,15 +189,15 @@
 	[self.msgManager asyncSend:msg];
 }
 
--(void) asyncSend:(PMMsg*)msg withCompletion:(void (^)(PMMsg*,NSError*))completion {
+-(void) asyncSend:(PMMsg*)msg withCompletion:(void (^)(PMMsg*,PMError*))completion {
 	[self.msgManager asyncSend:msg withCompletion:completion];
 }
 
--(void) asyncSend:(PMMsg*)msg withCompletion:(void (^)(PMMsg*,NSError*))completion onQueue:(dispatch_queue_t)queue {
+-(void) asyncSend:(PMMsg*)msg withCompletion:(void (^)(PMMsg*,PMError*))completion onQueue:(dispatch_queue_t)queue {
 	[self asyncSend:msg withCompletion:completion withProgress:nil onQueue:queue];
 }
 
--(void) processImageBody:(PMImageMsgBody*)imgBody withCompletion:(void (^)(PMMsg*,NSError*))completion withProgress:(void(^)(id<PMMsgBody>, NSUInteger, NSUInteger))progress onQueue:(dispatch_queue_t)queue chainId:(NSNumber*)chainId {
+-(void) processImageBody:(PMImageMsgBody*)imgBody withCompletion:(void (^)(PMMsg*,PMError*))completion withProgress:(void(^)(id<PMMsgBody>, NSUInteger, NSUInteger))progress onQueue:(dispatch_queue_t)queue chainId:(NSNumber*)chainId {
 
 	if(imgBody.isLocalUrl) {
 		NSMutableArray *chain = [self getChain:chainId];
@@ -211,7 +211,8 @@
 			completion:^(NSDictionary* d, NSError* e){
 				if(e) {
 					[self removeChain:chainId];
-					completion(nil, e);
+					completion(nil, [PMError errorWithCode:PMUploadFileError withError:e]);
+					return;
 				}
 				imgBody.url = d[@"url"];
 				imgBody.isLocalUrl = NO;
@@ -260,7 +261,7 @@
 	}
 }
 
--(void) asyncSend:(PMMsg*)msg withCompletion:(void (^)(PMMsg*,NSError*))completion withProgress:(void(^)(id<PMMsgBody>, NSUInteger, NSUInteger))progress onQueue:(dispatch_queue_t)queue {
+-(void) asyncSend:(PMMsg*)msg withCompletion:(void (^)(PMMsg*,PMError*))completion withProgress:(void(^)(id<PMMsgBody>, NSUInteger, NSUInteger))progress onQueue:(dispatch_queue_t)queue {
 	if(queue == nil) queue = PMChat.sharedInstance.defaultQueue;
 	NSMutableArray *chain = [[NSMutableArray alloc] init];
 	NSNumber *chainId = self.nextChainId;
@@ -283,14 +284,14 @@
 	[self chainCall:chainId];
 }
 
--(NSUInteger)saveMsg:(PMMsg*)msg error:(NSError**)err {
+-(NSUInteger)saveMsg:(PMMsg*)msg error:(PMError**)err {
 	PMDBManager *db = self.dbManager;
 	if(db)
 		return [db saveMsg:msg error:err];
 	return 0;
 }
 
--(NSInteger)updateMsg:(PMMsg*)msg withNewId:(NSString*)nid error:(NSError**)err {
+-(NSInteger)updateMsg:(PMMsg*)msg withNewId:(NSString*)nid error:(PMError**)err {
 	PMDBManager *db = self.dbManager;
 	if(db)
 		return [db updateMsg:msg withNewId:nid error:err];
