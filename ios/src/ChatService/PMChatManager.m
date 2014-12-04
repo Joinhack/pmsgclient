@@ -5,6 +5,7 @@
 #import <pmsg.h>
 #import "PMChatManager.h"
 #import "PMMsgManager.h"
+#import "PMContactManager.h"
 #import "PMDBManager.h"
 #import "PMFileManager.h"
 #import "../Models/PMImageMsgBody+Inner.h"
@@ -27,6 +28,7 @@
 	PMMsgManager* _msgManager;
 	PMFileManager* _fileManager;
 	PMDBManager* _dbManager;
+	PMContactManager *_contactManager;
 	NSMutableDictionary *_requestChains;
 	NSMutableArray *_delegates;
 	long _chainId;
@@ -52,6 +54,15 @@
 		_dbManager = [[PMDBManager alloc] init:PMChat.sharedInstance.dbPath];
 	}
 	return _dbManager;
+}
+
+-(PMContactManager*) contactManager {
+	if(_contactManager) return _contactManager;
+	@synchronized(self) {
+		if(_contactManager) return _contactManager;
+		_contactManager = [[PMContactManager alloc] init];
+	}
+	return _contactManager;
 }
 
 -(PMLoginManager*) loginManager {
@@ -308,6 +319,54 @@
 			_seq++;
 		return _seq;
 	}
+}
+
+-(BOOL) followUser:(NSInteger)uid {
+	return [self.contactManager followUser:uid];
+}
+
+-(BOOL) followUser:(NSInteger)uid withError:(PMError**)error {
+	return [self.contactManager followUser:uid withError:error];
+}
+
+-(BOOL) followUser:(NSInteger)uid withMessage:(NSString*)msg withError:(PMError**)error {
+	return [self.contactManager followUser:uid withMessage:msg withError:error];
+}
+
+-(void) asyncFollowUser:(NSInteger)uid withMessage:(NSString*)msg withCompletion:(void(^)(PMError*))completion onQueue:(dispatch_queue_t)queue {
+	[self.contactManager asyncFollowUser:uid withMessage:msg withCompletion:completion onQueue:queue];
+}
+
+-(BOOL) acceptUser:(NSInteger)uid {
+	return [self.contactManager acceptUser:uid];
+}
+
+-(BOOL) acceptUser:(NSInteger)uid withError:(PMError**)error {
+	return [self.contactManager acceptUser:uid withError:error];
+}
+
+-(BOOL) acceptUser:(NSInteger)uid withMessage:(NSString*)msg withError:(PMError**)error {
+	return [self.contactManager acceptUser:uid withMessage:msg withError:error];
+}
+
+-(void) asyncAcceptUser:(NSInteger)uid withMessage:(NSString*)msg withCompletion:(void(^)(PMError*))completion onQueue:(dispatch_queue_t)queue {
+	[self.contactManager asyncAcceptUser:uid withMessage:msg withCompletion:completion onQueue:queue];
+}
+
+-(BOOL) rejectUser:(NSInteger)uid {
+	return [self.contactManager rejectUser:uid];
+}
+
+-(BOOL) rejectUser:(NSInteger)uid withError:(PMError**)error {
+	return [self.contactManager rejectUser:uid withError:error];
+}
+
+-(BOOL) rejectUser:(NSInteger)uid withMessage:(NSString*)msg withError:(PMError**)error {
+	return [self.contactManager rejectUser:uid withMessage:msg withError:error];
+}
+
+-(void) asyncRejectUser:(NSInteger)uid withMessage:(NSString*)msg withCompletion:(void(^)(PMError*))completion onQueue:(dispatch_queue_t)queue {
+	[self.contactManager asyncRejectUser:uid withMessage:msg withCompletion:completion onQueue:queue];
 }
 
 @end

@@ -35,7 +35,6 @@
 		if(oq) return oq;
 		oq = dispatch_queue_create("pmsg.default.queue", DISPATCH_QUEUE_CONCURRENT);
 	}
-	printf("--%p\n", oq);
 	return oq;
 }
 

@@ -6,6 +6,12 @@ typedef enum {
 
 	PMLoginFail,
 
+	PMFollowUserFail,
+
+	PMAcceptUserFail,
+
+	PMRejectUserFail,
+
 	PMInvalidParameter,
 
 	PMConnectionClosed,
